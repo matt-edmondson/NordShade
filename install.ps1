@@ -8,6 +8,7 @@ $RepoAPIURL = "https://api.github.com/repos/matt-edmondson/NordShade/contents"
 $TempPath = "$env:TEMP\NordShade"
 $CurrentPath = Get-Location
 $PSScriptRoot = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
+$GlobalAutoApply = $null
 
 # Determine if we're running from the cloned repo or standalone
 if (Test-Path "$PSScriptRoot\README.md") {
@@ -67,23 +68,29 @@ function Download-ThemeFiles {
                 Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudioCode/NordShade.json" -OutFile "$TempPath\VisualStudioCode\NordShade.json"
                 Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudioCode/package.json" -OutFile "$TempPath\VisualStudioCode\package.json"
                 Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudioCode/README.md" -OutFile "$TempPath\VisualStudioCode\README.md"
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudioCode/install.ps1" -OutFile "$TempPath\VisualStudioCode\install.ps1"
             }
             "VisualStudio2022" {
                 Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudio2022/NordShade.vssettings" -OutFile "$TempPath\VisualStudio2022\NordShade.vssettings"
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudio2022/install.ps1" -OutFile "$TempPath\VisualStudio2022\install.ps1"
             }
             "WindowsTerminal" {
                 Invoke-WebRequest -Uri "$RepoURL/raw/main/WindowsTerminal/NordShade.json" -OutFile "$TempPath\WindowsTerminal\NordShade.json"
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/WindowsTerminal/install.ps1" -OutFile "$TempPath\WindowsTerminal\install.ps1"
             }
             "Windows11" {
                 Invoke-WebRequest -Uri "$RepoURL/raw/main/Windows11/theme.deskthemepack" -OutFile "$TempPath\Windows11\theme.deskthemepack"
                 Invoke-WebRequest -Uri "$RepoURL/raw/main/Windows11/NordShade.jpg" -OutFile "$TempPath\Windows11\NordShade.jpg" -ErrorAction SilentlyContinue
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/Windows11/install.ps1" -OutFile "$TempPath\Windows11\install.ps1"
             }
             "MicrosoftEdge" {
                 Invoke-WebRequest -Uri "$RepoURL/raw/main/MicrosoftEdge/manifest.json" -OutFile "$TempPath\MicrosoftEdge\manifest.json"
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/MicrosoftEdge/install.ps1" -OutFile "$TempPath\MicrosoftEdge\install.ps1" -ErrorAction SilentlyContinue
             }
             "Obsidian" {
                 Invoke-WebRequest -Uri "$RepoURL/raw/main/Obsidian/theme.css" -OutFile "$TempPath\Obsidian\theme.css"
                 Invoke-WebRequest -Uri "$RepoURL/raw/main/Obsidian/manifest.json" -OutFile "$TempPath\Obsidian\manifest.json"
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/Obsidian/install.ps1" -OutFile "$TempPath\Obsidian\install.ps1"
             }
             "Neovim" {
                 Invoke-WebRequest -Uri "$RepoURL/raw/main/Neovim/nord_shade.vim" -OutFile "$TempPath\Neovim\nord_shade.vim"
@@ -96,9 +103,11 @@ function Download-ThemeFiles {
             }
             "Discord" {
                 Invoke-WebRequest -Uri "$RepoURL/raw/main/Discord/nord_shade.theme.css" -OutFile "$TempPath\Discord\nord_shade.theme.css"
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/Discord/install.ps1" -OutFile "$TempPath\Discord\install.ps1"
             }
             "GitHubDesktop" {
                 Invoke-WebRequest -Uri "$RepoURL/raw/main/GitHubDesktop/nord-shade.less" -OutFile "$TempPath\GitHubDesktop\nord-shade.less"
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/GitHubDesktop/install.ps1" -OutFile "$TempPath\GitHubDesktop\install.ps1" -ErrorAction SilentlyContinue
             }
             default {
                 Write-Host "No fallback download method for $ThemeName" -ForegroundColor Red
@@ -140,47 +149,8 @@ function Install-VSCodeTheme {
         Download-ThemeFiles -ThemeName "VisualStudioCode"
     }
     
-    $vsCodeExtPath = "$env:USERPROFILE\.vscode\extensions\nordshade-theme"
-    
-    # Create directory if it doesn't exist
-    if (-not (Test-Path $vsCodeExtPath)) {
-        New-Item -Path $vsCodeExtPath -ItemType Directory -Force | Out-Null
-    }
-    
-    # Copy theme files
-    Copy-Item "$NordShadeRoot\VisualStudioCode\NordShade.json" -Destination $vsCodeExtPath
-    Copy-Item "$NordShadeRoot\VisualStudioCode\package.json" -Destination $vsCodeExtPath
-    Copy-Item "$NordShadeRoot\VisualStudioCode\README.md" -Destination $vsCodeExtPath
-    
-    # Automatically apply the theme by updating settings.json
-    $settingsPath = "$env:APPDATA\Code\User\settings.json"
-    
-    # Create settings.json if it doesn't exist
-    if (-not (Test-Path $settingsPath)) {
-        New-Item -Path $settingsPath -ItemType File -Force | Out-Null
-        Set-Content -Path $settingsPath -Value "{}"
-    }
-    
-    # Read current settings
-    try {
-        $settings = Get-Content -Path $settingsPath -Raw | ConvertFrom-Json
-    } catch {
-        # If the file is invalid JSON, create a new settings object
-        $settings = [PSCustomObject]@{}
-    }
-
-    # Backup settings
-    Copy-Item -Path $settingsPath -Destination "$settingsPath.backup" -Force
-    
-    # Update workbench color theme
-    $settings.PSObject.Properties.Remove('workbench.colorTheme')
-    $settings | Add-Member -Type NoteProperty -Name 'workbench.colorTheme' -Value 'NordShade'
-    
-    # Save settings
-    $settings | ConvertTo-Json -Depth 20 | Set-Content -Path $settingsPath
-    
-    Write-Host "VS Code theme installed and automatically applied!" -ForegroundColor Green
-    Write-Host "Settings backup created at $settingsPath.backup" -ForegroundColor Green
+    # Call the VSCode-specific installer
+    & "$NordShadeRoot\VisualStudioCode\install.ps1" -AutoApply:$GlobalAutoApply
 }
 
 function Install-VisualStudioTheme {
@@ -191,28 +161,8 @@ function Install-VisualStudioTheme {
         Download-ThemeFiles -ThemeName "VisualStudio2022"
     }
     
-    # Copy settings file to a location the user can easily access
-    $settingsPath = "$env:USERPROFILE\Documents\NordShade.vssettings"
-    Copy-Item "$NordShadeRoot\VisualStudio2022\NordShade.vssettings" -Destination $settingsPath
-    
-    # Try to apply settings automatically using devenv.exe
-    $vsPath = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\VisualStudio\SxS\VS7" -Name "17.0" -ErrorAction SilentlyContinue)."17.0"
-    if ($vsPath) {
-        $devenvPath = Join-Path $vsPath "Common7\IDE\devenv.exe"
-        if (Test-Path $devenvPath) {
-            Write-Host "Attempting to apply Visual Studio settings automatically..." -ForegroundColor Yellow
-            Start-Process -FilePath $devenvPath -ArgumentList "/resetuserdata", "/command", "Tools.ImportandExportSettings /import:""$settingsPath""" -Wait
-            Write-Host "Visual Studio theme should be applied. If Visual Studio was running, you may need to restart it." -ForegroundColor Green
-        } else {
-            Write-Host "Could not find Visual Studio executable. Theme installed but must be applied manually." -ForegroundColor Yellow
-            Write-Host "To apply the theme, open Visual Studio -> Tools -> Import and Export Settings..." -ForegroundColor Yellow
-            Write-Host "Then select 'Import selected environment settings' and browse to: $settingsPath" -ForegroundColor Yellow
-        }
-    } else {
-        Write-Host "Visual Studio settings file copied to $settingsPath" -ForegroundColor Green
-        Write-Host "To apply the theme, open Visual Studio -> Tools -> Import and Export Settings..." -ForegroundColor Yellow
-        Write-Host "Then select 'Import selected environment settings' and browse to the file location." -ForegroundColor Yellow
-    }
+    # Call the Visual Studio-specific installer
+    & "$NordShadeRoot\VisualStudio2022\install.ps1" -AutoApply:$GlobalAutoApply
 }
 
 function Install-WindowsTerminalTheme {
@@ -223,51 +173,8 @@ function Install-WindowsTerminalTheme {
         Download-ThemeFiles -ThemeName "WindowsTerminal"
     }
     
-    # Get Windows Terminal settings path
-    $settingsPath = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
-    $settingsPathPreview = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe\LocalState\settings.json"
-    
-    # Check if settings.json exists in either location
-    if (Test-Path $settingsPath) {
-        $terminalSettingsPath = $settingsPath
-    } elseif (Test-Path $settingsPathPreview) {
-        $terminalSettingsPath = $settingsPathPreview
-    } else {
-        Write-Host "Windows Terminal settings.json not found." -ForegroundColor Red
-        return
-    }
-    
-    # Read terminal settings
-    $settings = Get-Content -Path $terminalSettingsPath -Raw | ConvertFrom-Json
-    
-    # Backup existing settings
-    Copy-Item -Path $terminalSettingsPath -Destination "$terminalSettingsPath.backup"
-    Write-Host "Backed up existing settings to $terminalSettingsPath.backup" -ForegroundColor Green
-    
-    # Get NordShade scheme
-    $nordShadeScheme = Get-Content -Path "$NordShadeRoot\WindowsTerminal\NordShade.json" -Raw | ConvertFrom-Json
-    
-    # Check if schemes property exists, create if it doesn't
-    if (-not $settings.schemes) {
-        $settings | Add-Member -Type NoteProperty -Name schemes -Value @()
-    }
-    
-    # Remove existing NordShade scheme if it exists
-    $settings.schemes = $settings.schemes | Where-Object { $_.name -ne "NordShade" }
-    
-    # Add NordShade scheme
-    $settings.schemes += $nordShadeScheme
-    
-    # Apply theme to all profiles
-    if ($settings.profiles -and $settings.profiles.defaults) {
-        # Set the colorScheme property in defaults to apply to all profiles
-        $settings.profiles.defaults | Add-Member -Type NoteProperty -Name colorScheme -Value "NordShade" -Force
-    }
-    
-    # Save settings
-    $settings | ConvertTo-Json -Depth 20 | Set-Content -Path $terminalSettingsPath
-    
-    Write-Host "Windows Terminal theme installed and applied as the default color scheme!" -ForegroundColor Green
+    # Call the Windows Terminal-specific installer
+    & "$NordShadeRoot\WindowsTerminal\install.ps1" -AutoApply:$GlobalAutoApply
 }
 
 function Install-Windows11Theme {
@@ -278,46 +185,8 @@ function Install-Windows11Theme {
         Download-ThemeFiles -ThemeName "Windows11"
     }
     
-    # Create destination folder for the wallpaper
-    $themeDir = "$env:WINDIR\Resources\Themes\NordShade"
-    if (-not (Test-Path $themeDir)) {
-        New-Item -Path $themeDir -ItemType Directory -Force | Out-Null
-    }
-    
-    # Copy theme file
-    $themePath = "$env:USERPROFILE\AppData\Local\Microsoft\Windows\Themes\NordShade.theme"
-    Copy-Item "$NordShadeRoot\Windows11\theme.deskthemepack" -Destination $themePath
-    
-    # Copy the wallpaper if it exists
-    $wallpaperSource = "$NordShadeRoot\Windows11\NordShade.jpg"
-    $wallpaperDest = "$themeDir\NordShade.jpg"
-    
-    if (Test-Path $wallpaperSource) {
-        Write-Host "Copying NordShade wallpaper..." -ForegroundColor Yellow
-        Copy-Item $wallpaperSource -Destination $wallpaperDest -Force
-        Write-Host "Wallpaper installed to $wallpaperDest" -ForegroundColor Green
-    } else {
-        Write-Host "NordShade wallpaper not found at $wallpaperSource" -ForegroundColor Red
-        Write-Host "Please provide a wallpaper named 'NordShade.jpg' in $themeDir" -ForegroundColor Yellow
-    }
-    
-    # Try to apply the theme automatically
-    Write-Host "Attempting to apply Windows 11 theme automatically..." -ForegroundColor Yellow
-    
-    try {
-        # Apply the theme using rundll32
-        Start-Process -FilePath "rundll32.exe" -ArgumentList "desk.cpl,InstallTheme $themePath" -Wait
-        Write-Host "Windows 11 theme applied successfully!" -ForegroundColor Green
-    } catch {
-        Write-Host "Could not apply theme automatically. Theme installed to $themePath" -ForegroundColor Yellow
-        Write-Host "To apply the theme, double-click the theme file or go to Settings -> Personalization -> Themes" -ForegroundColor Yellow
-    }
-    
-    if (Test-Path $wallpaperDest) {
-        Write-Host "Wallpaper is ready and will be used by the theme" -ForegroundColor Green
-    } else {
-        Write-Host "Note: You'll need to provide a wallpaper named 'NordShade.jpg' in $themeDir" -ForegroundColor Yellow
-    }
+    # Call the Windows 11-specific installer
+    & "$NordShadeRoot\Windows11\install.ps1" -AutoApply:$GlobalAutoApply
 }
 
 function Install-EdgeTheme {
@@ -328,20 +197,25 @@ function Install-EdgeTheme {
         Download-ThemeFiles -ThemeName "MicrosoftEdge"
     }
     
-    # Create extension directory
-    $edgeExtPath = "$env:USERPROFILE\EdgeExtensions\NordShade"
-    if (-not (Test-Path $edgeExtPath)) {
-        New-Item -Path $edgeExtPath -ItemType Directory -Force | Out-Null
+    # Check if there's a specific installer script
+    if (Test-Path "$NordShadeRoot\MicrosoftEdge\install.ps1") {
+        & "$NordShadeRoot\MicrosoftEdge\install.ps1"
+    } else {
+        # Fallback to manual instructions
+        $edgeExtPath = "$env:USERPROFILE\EdgeExtensions\NordShade"
+        if (-not (Test-Path $edgeExtPath)) {
+            New-Item -Path $edgeExtPath -ItemType Directory -Force | Out-Null
+        }
+        
+        # Copy extension files
+        Copy-Item "$NordShadeRoot\MicrosoftEdge\manifest.json" -Destination $edgeExtPath
+        
+        Write-Host "Microsoft Edge theme prepared at $edgeExtPath" -ForegroundColor Green
+        Write-Host "Edge themes require manual installation. To install:" -ForegroundColor Yellow
+        Write-Host "1. Open Edge and go to edge://extensions/" -ForegroundColor Yellow
+        Write-Host "2. Enable Developer Mode (toggle in the bottom-left)" -ForegroundColor Yellow
+        Write-Host "3. Click 'Load unpacked' and select the folder: $edgeExtPath" -ForegroundColor Yellow
     }
-    
-    # Copy extension files
-    Copy-Item "$NordShadeRoot\MicrosoftEdge\manifest.json" -Destination $edgeExtPath
-    
-    Write-Host "Microsoft Edge theme prepared at $edgeExtPath" -ForegroundColor Green
-    Write-Host "Edge themes require manual installation. To install:" -ForegroundColor Yellow
-    Write-Host "1. Open Edge and go to edge://extensions/" -ForegroundColor Yellow
-    Write-Host "2. Enable Developer Mode (toggle in the bottom-left)" -ForegroundColor Yellow
-    Write-Host "3. Click 'Load unpacked' and select the folder: $edgeExtPath" -ForegroundColor Yellow
 }
 
 function Install-ObsidianTheme {
@@ -352,60 +226,8 @@ function Install-ObsidianTheme {
         Download-ThemeFiles -ThemeName "Obsidian"
     }
     
-    # Ask for Obsidian vault location
-    $defaultVault = "$env:USERPROFILE\Documents\Obsidian"
-    $vaultPath = Read-Host "Enter your Obsidian vault path (or press Enter for default: $defaultVault)"
-    
-    if ([string]::IsNullOrWhiteSpace($vaultPath)) {
-        $vaultPath = $defaultVault
-    }
-    
-    # Check if vault exists
-    if (-not (Test-Path $vaultPath)) {
-        Write-Host "Vault not found at $vaultPath. Please check the path and try again." -ForegroundColor Red
-        return
-    }
-    
-    # Create theme directory
-    $obsidianThemePath = "$vaultPath\.obsidian\themes\NordShade"
-    if (-not (Test-Path $obsidianThemePath)) {
-        New-Item -Path $obsidianThemePath -ItemType Directory -Force | Out-Null
-    }
-    
-    # Copy theme files
-    Copy-Item "$NordShadeRoot\Obsidian\theme.css" -Destination $obsidianThemePath
-    Copy-Item "$NordShadeRoot\Obsidian\manifest.json" -Destination $obsidianThemePath
-    
-    # Try to auto-apply theme by updating appearance.json
-    $appearanceJsonPath = "$vaultPath\.obsidian\appearance.json"
-    
-    if (Test-Path $appearanceJsonPath) {
-        # Backup appearance.json
-        Copy-Item -Path $appearanceJsonPath -Destination "$appearanceJsonPath.backup" -Force
-        Write-Host "Backed up Obsidian appearance settings to $appearanceJsonPath.backup" -ForegroundColor Green
-        
-        try {
-            # Read appearance.json
-            $appearanceConfig = Get-Content -Path $appearanceJsonPath -Raw | ConvertFrom-Json
-            
-            # Update theme setting
-            $appearanceConfig.theme = "NordShade"
-            
-            # Save updated config
-            $appearanceConfig | ConvertTo-Json -Depth 20 | Set-Content -Path $appearanceJsonPath
-            
-            Write-Host "Obsidian theme installed and applied successfully!" -ForegroundColor Green
-            Write-Host "If Obsidian is currently running, you may need to restart it for changes to take effect." -ForegroundColor Yellow
-        } catch {
-            Write-Host "Could not automatically apply Obsidian theme." -ForegroundColor Yellow
-            Write-Host "Theme installed successfully to $obsidianThemePath" -ForegroundColor Green
-            Write-Host "To activate, open Obsidian -> Settings -> Appearance -> Select 'NordShade' theme" -ForegroundColor Yellow
-        }
-    } else {
-        Write-Host "Could not find Obsidian appearance settings. Theme has been installed but must be activated manually." -ForegroundColor Yellow
-        Write-Host "Theme installed successfully to $obsidianThemePath" -ForegroundColor Green
-        Write-Host "To activate, open Obsidian -> Settings -> Appearance -> Select 'NordShade' theme" -ForegroundColor Yellow
-    }
+    # Call the Obsidian-specific installer
+    & "$NordShadeRoot\Obsidian\install.ps1" -AutoApply:$GlobalAutoApply
 }
 
 function Install-NeovimTheme {
@@ -429,7 +251,7 @@ function Install-JetBrainsTheme {
     }
     
     # Call the JetBrains-specific installer
-    & "$NordShadeRoot\JetBrains\install.ps1"
+    & "$NordShadeRoot\JetBrains\install.ps1" -AutoApply:$GlobalAutoApply
 }
 
 function Install-DiscordTheme {
@@ -440,20 +262,8 @@ function Install-DiscordTheme {
         Download-ThemeFiles -ThemeName "Discord"
     }
     
-    # Check if BetterDiscord is installed
-    $betterDiscordPath = "$env:APPDATA\BetterDiscord\themes"
-    
-    if (Test-Path $betterDiscordPath) {
-        Copy-Item "$NordShadeRoot\Discord\nord_shade.theme.css" -Destination $betterDiscordPath
-        Write-Host "Theme installed to BetterDiscord themes folder: $betterDiscordPath" -ForegroundColor Green
-        Write-Host "To activate, open Discord and go to User Settings > BetterDiscord > Themes and enable NordShade" -ForegroundColor Yellow
-    } else {
-        # Just copy theme to Documents folder for manual installation
-        $targetPath = "$env:USERPROFILE\Documents\NordShade-Discord.theme.css"
-        Copy-Item "$NordShadeRoot\Discord\nord_shade.theme.css" -Destination $targetPath
-        Write-Host "BetterDiscord not detected. Theme file copied to: $targetPath" -ForegroundColor Yellow
-        Write-Host "Please refer to $NordShadeRoot\Discord\README.md for manual installation instructions" -ForegroundColor Yellow
-    }
+    # Call the Discord-specific installer
+    & "$NordShadeRoot\Discord\install.ps1" -AutoApply:$GlobalAutoApply
 }
 
 function Install-GitHubDesktopTheme {
@@ -464,12 +274,18 @@ function Install-GitHubDesktopTheme {
         Download-ThemeFiles -ThemeName "GitHubDesktop"
     }
     
-    # Copy file to Documents for user to manually install
-    $targetPath = "$env:USERPROFILE\Documents\NordShade-GitHubDesktop.less"
-    Copy-Item "$NordShadeRoot\GitHubDesktop\nord-shade.less" -Destination $targetPath
-    
-    Write-Host "GitHub Desktop theme file copied to: $targetPath" -ForegroundColor Yellow
-    Write-Host "Please refer to $NordShadeRoot\GitHubDesktop\README.md for manual installation instructions" -ForegroundColor Yellow
+    # Check if there's a specific installer script
+    if (Test-Path "$NordShadeRoot\GitHubDesktop\install.ps1") {
+        & "$NordShadeRoot\GitHubDesktop\install.ps1" -AutoApply:$GlobalAutoApply
+    } else {
+        # Fallback to manual instructions
+        $targetPath = "$env:USERPROFILE\Documents\NordShade-GitHubDesktop.less"
+        Copy-Item "$NordShadeRoot\GitHubDesktop\nord-shade.less" -Destination $targetPath
+        
+        Write-Host "GitHub Desktop theme file copied to: $targetPath" -ForegroundColor Yellow
+        Write-Host "GitHub Desktop themes require manual installation." -ForegroundColor Yellow
+        Write-Host "Please check the project README for installation instructions." -ForegroundColor Yellow
+    }
 }
 
 function Install-AllThemes {
@@ -551,6 +367,18 @@ foreach ($pattern in $JetBrainsPatterns) {
 # Present the menu to the user
 Write-Host "===== NordShade Theme Installer =====" -ForegroundColor Cyan
 Write-Host "===================================" -ForegroundColor Cyan
+
+# Ask about global auto-apply preference
+$autoApplySetting = Read-Host "Would you like themes to be automatically applied after installation? (y/n)"
+$GlobalAutoApply = $autoApplySetting -eq 'y'
+
+if ($GlobalAutoApply) {
+    Write-Host "Themes will be automatically applied when possible" -ForegroundColor Yellow
+} else {
+    Write-Host "Themes will be installed but not automatically applied" -ForegroundColor Yellow
+    Write-Host "You'll need to activate them manually in each application" -ForegroundColor Yellow
+}
+
 Write-Host "Please select an option:"
 Write-Host "1) Install for all detected applications"
 Write-Host "2) Pick and choose which applications to install for"
