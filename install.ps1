@@ -269,7 +269,7 @@ function Detect-Applications {
     }
     
     # Check for Cursor IDE
-    if ((Test-Path "${env:LOCALAPPDATA}\Programs\Cursor\cursor.exe") -or 
+    if ((Test-Path "${env:LOCALAPPDATA}\Programs\Cursor\cursor.exe") -or
         (Test-Path "${env:APPDATA}\cursor-editor")) {
         if ($availableThemes -contains "Cursor") {
             $detectedApps["Cursor"] = "Cursor IDE"
@@ -344,8 +344,8 @@ function Detect-Applications {
     }
     
     # Check for Discord (BetterDiscord/Vencord)
-    if ((Test-Path "${env:APPDATA}\BetterDiscord") -or 
-        (Test-Path "${env:APPDATA}\BetterDiscord\plugins") -or 
+    if ((Test-Path "${env:APPDATA}\BetterDiscord") -or
+        (Test-Path "${env:APPDATA}\BetterDiscord\plugins") -or
         (Test-Path "${env:APPDATA}\Vencord")) {
         if ($availableThemes -contains "Discord") {
             $detectedApps["Discord"] = "Discord"
