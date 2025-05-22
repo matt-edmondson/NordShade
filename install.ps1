@@ -3,6 +3,7 @@
 # Can be run without cloning the repository
 
 $ErrorActionPreference = "SilentlyContinue"
+$ProgressPreference = "SilentlyContinue"
 $RepoURL = "https://github.com/matt-edmondson/NordShade"
 $RepoAPIURL = "https://api.github.com/repos/matt-edmondson/NordShade/contents"
 $TempPath = "${env:TEMP}\NordShade"
