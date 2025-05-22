@@ -1,15 +1,21 @@
 {
   "themes": {
-    "VisualStudioCode": ["NordShade.json", "package.json", "README.md"],
-    "VisualStudio2022": ["NordShade.vssettings", "README.md"],
-    "WindowsTerminal": ["NordShade.json", "README.md"],
-    "Windows11": ["theme.deskthemepack", "NordShade.jpg", "README.md"],
-    "MicrosoftEdge": ["manifest.json", "README.md"],
-    "Obsidian": ["theme.css", "manifest.json", "README.md"],
+    "VisualStudioCode": [
+      "NordShade.json",
+      "package.json",
+      "README.md",
+      "install.ps1",
+      "install.sh"
+    ],
+    "VisualStudio2022": ["NordShade.vssettings", "install.ps1"],
+    "WindowsTerminal": ["NordShade.json", "install.ps1", "install.sh"],
+    "Windows11": ["theme.deskthemepack", "NordShade.jpg", "install.ps1"],
+    "MicrosoftEdge": ["manifest.json", "install.ps1"],
+    "Obsidian": ["theme.css", "manifest.json", "install.ps1", "install.sh"],
     "Neovim": ["nord_shade.vim", "install.ps1", "install.sh"],
     "JetBrains": ["NordShade.xml", "install.ps1", "install.sh", "README.md"],
-    "Discord": ["nord_shade.theme.css", "README.md"],
-    "GitHubDesktop": ["nord-shade.less", "README.md"]
+    "Discord": ["nord_shade.theme.css", "install.ps1", "install.sh"],
+    "GitHubDesktop": ["nord-shade.less", "install.ps1", "install.sh"]
   },
-  "baseUrl": "https://raw.githubusercontent.com/matt-edmondson/NordShade/main"
+  "baseUrl": "https://github.com/matt-edmondson/NordShade/raw/main"
 }
