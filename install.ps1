@@ -17,89 +17,130 @@ if (Test-Path "$PSScriptRoot\README.md") {
 } else {
     $NordShadeRoot = $TempPath
     $IsRepo = $false
-    Write-Host "Running standalone installation - will download required files" -ForegroundColor Cyan
+    Write-Host "Running standalone installation - will download required files on demand" -ForegroundColor Cyan
 }
 
-function Download-Repository {
-    Write-Host "Downloading NordShade repository files..." -ForegroundColor Yellow
+# Index.json caching
+$IndexJson = $null
+
+function Get-IndexJson {
+    if ($null -ne $IndexJson) {
+        return $IndexJson
+    }
     
-    # Create temp directory if it doesn't exist
+    $indexUrl = "$RepoURL/raw/main/index.json"
+    $indexPath = "$TempPath\index.json"
+    
     if (-not (Test-Path $TempPath)) {
         New-Item -Path $TempPath -ItemType Directory -Force | Out-Null
     }
     
-    # Check for git and use it if available
-    if (Get-Command git -ErrorAction SilentlyContinue) {
-        Write-Host "Using git to clone repository..." -ForegroundColor Yellow
-        Push-Location $env:TEMP
-        & git clone --depth 1 $RepoURL
-        Pop-Location
-        return
-    }
-    
-    # Fall back to downloading individual theme files
-    Write-Host "Git not found. Downloading individual theme files..." -ForegroundColor Yellow
-    
-    # First, download the index.json file
-    $indexUrl = "$RepoURL/raw/main/index.json"
-    $indexPath = "$TempPath\index.json"
-    
     try {
         Invoke-WebRequest -Uri $indexUrl -OutFile $indexPath
-        $indexJson = Get-Content -Path $indexPath -Raw | ConvertFrom-Json
-        $baseUrl = $indexJson.baseUrl
-        
-        # Loop through each theme in the index
-        foreach ($themeName in $indexJson.themes.PSObject.Properties.Name) {
-            Write-Host "Downloading files for $themeName..." -ForegroundColor Yellow
-            
-            # Create directory for theme if it doesn't exist
-            if (-not (Test-Path "$TempPath\$themeName")) {
-                New-Item -Path "$TempPath\$themeName" -ItemType Directory -Force | Out-Null
-            }
-            
-            # Download each file listed for this theme
-            foreach ($file in $indexJson.themes.$themeName) {
-                $fileUrl = "$baseUrl/$themeName/$file"
-                $filePath = "$TempPath\$themeName\$file"
-                Write-Host "  - $file" -ForegroundColor Gray
-                try {
-                    Invoke-WebRequest -Uri $fileUrl -OutFile $filePath
-                } catch {
-                    Write-Host "    Failed to download $file: $_" -ForegroundColor Red
-                }
-            }
-        }
+        $script:IndexJson = Get-Content -Path $indexPath -Raw | ConvertFrom-Json
+        return $script:IndexJson
     } catch {
-        Write-Host "Failed to download or parse index.json: $_" -ForegroundColor Red
-        Write-Host "Falling back to essential files..." -ForegroundColor Yellow
-        
-        # Create basic theme directories in case index.json fails
-        $themeDirs = @(
-            "VisualStudioCode", "VisualStudio2022", "WindowsTerminal", "Windows11", 
-            "MicrosoftEdge", "Obsidian", "Neovim", "JetBrains", "Discord", "GitHubDesktop"
-        )
-        foreach ($dir in $themeDirs) {
-            if (-not (Test-Path "$TempPath\$dir")) {
-                New-Item -Path "$TempPath\$dir" -ItemType Directory -Force | Out-Null
-            }
-        }
-        
-        # Essential files minimum required
-        Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudioCode/NordShade.json" -OutFile "$TempPath\VisualStudioCode\NordShade.json"
-        Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudio2022/NordShade.vssettings" -OutFile "$TempPath\VisualStudio2022\NordShade.vssettings"
-        Invoke-WebRequest -Uri "$RepoURL/raw/main/WindowsTerminal/NordShade.json" -OutFile "$TempPath\WindowsTerminal\NordShade.json"
-        Invoke-WebRequest -Uri "$RepoURL/raw/main/Windows11/theme.deskthemepack" -OutFile "$TempPath\Windows11\theme.deskthemepack"
-        Invoke-WebRequest -Uri "$RepoURL/raw/main/Neovim/nord_shade.vim" -OutFile "$TempPath\Neovim\nord_shade.vim"
-        Invoke-WebRequest -Uri "$RepoURL/raw/main/JetBrains/NordShade.xml" -OutFile "$TempPath\JetBrains\NordShade.xml"
+        Write-Host "Failed to download index.json: $_" -ForegroundColor Red
+        return $null
+    }
+}
+
+function Download-ThemeFiles {
+    param (
+        [string]$ThemeName
+    )
+    
+    Write-Host "Downloading files for $ThemeName theme..." -ForegroundColor Yellow
+    
+    # Create directory for theme if it doesn't exist
+    if (-not (Test-Path "$TempPath\$ThemeName")) {
+        New-Item -Path "$TempPath\$ThemeName" -ItemType Directory -Force | Out-Null
     }
     
-    Write-Host "Theme files downloaded successfully" -ForegroundColor Green
+    $indexJson = Get-IndexJson
+    if ($null -eq $indexJson) {
+        # Fallback for essential files if index.json fails
+        Write-Host "Using fallback download method for $ThemeName..." -ForegroundColor Yellow
+        
+        switch ($ThemeName) {
+            "VisualStudioCode" {
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudioCode/NordShade.json" -OutFile "$TempPath\VisualStudioCode\NordShade.json"
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudioCode/package.json" -OutFile "$TempPath\VisualStudioCode\package.json"
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudioCode/README.md" -OutFile "$TempPath\VisualStudioCode\README.md"
+            }
+            "VisualStudio2022" {
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudio2022/NordShade.vssettings" -OutFile "$TempPath\VisualStudio2022\NordShade.vssettings"
+            }
+            "WindowsTerminal" {
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/WindowsTerminal/NordShade.json" -OutFile "$TempPath\WindowsTerminal\NordShade.json"
+            }
+            "Windows11" {
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/Windows11/theme.deskthemepack" -OutFile "$TempPath\Windows11\theme.deskthemepack"
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/Windows11/NordShade.jpg" -OutFile "$TempPath\Windows11\NordShade.jpg" -ErrorAction SilentlyContinue
+            }
+            "MicrosoftEdge" {
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/MicrosoftEdge/manifest.json" -OutFile "$TempPath\MicrosoftEdge\manifest.json"
+            }
+            "Obsidian" {
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/Obsidian/theme.css" -OutFile "$TempPath\Obsidian\theme.css"
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/Obsidian/manifest.json" -OutFile "$TempPath\Obsidian\manifest.json"
+            }
+            "Neovim" {
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/Neovim/nord_shade.vim" -OutFile "$TempPath\Neovim\nord_shade.vim"
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/Neovim/install.ps1" -OutFile "$TempPath\Neovim\install.ps1"
+            }
+            "JetBrains" {
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/JetBrains/NordShade.xml" -OutFile "$TempPath\JetBrains\NordShade.xml"
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/JetBrains/install.ps1" -OutFile "$TempPath\JetBrains\install.ps1"
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/JetBrains/README.md" -OutFile "$TempPath\JetBrains\README.md" -ErrorAction SilentlyContinue
+            }
+            "Discord" {
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/Discord/nord_shade.theme.css" -OutFile "$TempPath\Discord\nord_shade.theme.css"
+            }
+            "GitHubDesktop" {
+                Invoke-WebRequest -Uri "$RepoURL/raw/main/GitHubDesktop/nord-shade.less" -OutFile "$TempPath\GitHubDesktop\nord-shade.less"
+            }
+            default {
+                Write-Host "No fallback download method for $ThemeName" -ForegroundColor Red
+                return $false
+            }
+        }
+        
+        return $true
+    }
+    
+    $baseUrl = $indexJson.baseUrl
+    $themeFiles = $indexJson.themes.$ThemeName
+    
+    if ($null -eq $themeFiles) {
+        Write-Host "Theme $ThemeName not found in index.json" -ForegroundColor Red
+        return $false
+    }
+    
+    # Download each file listed for this theme
+    foreach ($file in $themeFiles) {
+        $fileUrl = "$baseUrl/$ThemeName/$file"
+        $filePath = "$TempPath\$ThemeName\$file"
+        Write-Host "  - $file" -ForegroundColor Gray
+        try {
+            Invoke-WebRequest -Uri $fileUrl -OutFile $filePath
+        } catch {
+            Write-Host "    Failed to download $file: $_" -ForegroundColor Red
+        }
+    }
+    
+    return $true
 }
 
 function Install-VSCodeTheme {
-    $vsCodeExtPath = "$env:USERPROFILE\.vscode\extensions\nordshade-theme"
     Write-Host "Installing NordShade for Visual Studio Code..." -ForegroundColor Yellow
+    
+    # Download theme files if running standalone
+    if (-not $IsRepo) {
+        Download-ThemeFiles -ThemeName "VisualStudioCode"
+    }
+    
+    $vsCodeExtPath = "$env:USERPROFILE\.vscode\extensions\nordshade-theme"
     
     # Create directory if it doesn't exist
     if (-not (Test-Path $vsCodeExtPath)) {
@@ -145,6 +186,11 @@ function Install-VSCodeTheme {
 function Install-VisualStudioTheme {
     Write-Host "Installing NordShade for Visual Studio 2022..." -ForegroundColor Yellow
     
+    # Download theme files if running standalone
+    if (-not $IsRepo) {
+        Download-ThemeFiles -ThemeName "VisualStudio2022"
+    }
+    
     # Copy settings file to a location the user can easily access
     $settingsPath = "$env:USERPROFILE\Documents\NordShade.vssettings"
     Copy-Item "$NordShadeRoot\VisualStudio2022\NordShade.vssettings" -Destination $settingsPath
@@ -171,6 +217,11 @@ function Install-VisualStudioTheme {
 
 function Install-WindowsTerminalTheme {
     Write-Host "Installing NordShade for Windows Terminal..." -ForegroundColor Yellow
+    
+    # Download theme files if running standalone
+    if (-not $IsRepo) {
+        Download-ThemeFiles -ThemeName "WindowsTerminal"
+    }
     
     # Get Windows Terminal settings path
     $settingsPath = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
@@ -222,6 +273,11 @@ function Install-WindowsTerminalTheme {
 function Install-Windows11Theme {
     Write-Host "Installing NordShade for Windows 11..." -ForegroundColor Yellow
     
+    # Download theme files if running standalone
+    if (-not $IsRepo) {
+        Download-ThemeFiles -ThemeName "Windows11"
+    }
+    
     # Create destination folder for the wallpaper
     $themeDir = "$env:WINDIR\Resources\Themes\NordShade"
     if (-not (Test-Path $themeDir)) {
@@ -267,6 +323,11 @@ function Install-Windows11Theme {
 function Install-EdgeTheme {
     Write-Host "Installing NordShade for Microsoft Edge..." -ForegroundColor Yellow
     
+    # Download theme files if running standalone
+    if (-not $IsRepo) {
+        Download-ThemeFiles -ThemeName "MicrosoftEdge"
+    }
+    
     # Create extension directory
     $edgeExtPath = "$env:USERPROFILE\EdgeExtensions\NordShade"
     if (-not (Test-Path $edgeExtPath)) {
@@ -285,6 +346,11 @@ function Install-EdgeTheme {
 
 function Install-ObsidianTheme {
     Write-Host "Installing NordShade for Obsidian..." -ForegroundColor Yellow
+    
+    # Download theme files if running standalone
+    if (-not $IsRepo) {
+        Download-ThemeFiles -ThemeName "Obsidian"
+    }
     
     # Ask for Obsidian vault location
     $defaultVault = "$env:USERPROFILE\Documents\Obsidian"
@@ -345,6 +411,11 @@ function Install-ObsidianTheme {
 function Install-NeovimTheme {
     Write-Host "Installing NordShade for Neovim..." -ForegroundColor Yellow
     
+    # Download theme files if running standalone
+    if (-not $IsRepo) {
+        Download-ThemeFiles -ThemeName "Neovim"
+    }
+    
     # Call the Neovim-specific installer
     & "$NordShadeRoot\Neovim\install.ps1"
 }
@@ -352,12 +423,22 @@ function Install-NeovimTheme {
 function Install-JetBrainsTheme {
     Write-Host "Installing NordShade for JetBrains IDEs..." -ForegroundColor Yellow
     
+    # Download theme files if running standalone
+    if (-not $IsRepo) {
+        Download-ThemeFiles -ThemeName "JetBrains"
+    }
+    
     # Call the JetBrains-specific installer
     & "$NordShadeRoot\JetBrains\install.ps1"
 }
 
 function Install-DiscordTheme {
     Write-Host "Installing NordShade for Discord..." -ForegroundColor Yellow
+    
+    # Download theme files if running standalone
+    if (-not $IsRepo) {
+        Download-ThemeFiles -ThemeName "Discord"
+    }
     
     # Check if BetterDiscord is installed
     $betterDiscordPath = "$env:APPDATA\BetterDiscord\themes"
@@ -377,6 +458,11 @@ function Install-DiscordTheme {
 
 function Install-GitHubDesktopTheme {
     Write-Host "Installing NordShade for GitHub Desktop..." -ForegroundColor Yellow
+    
+    # Download theme files if running standalone
+    if (-not $IsRepo) {
+        Download-ThemeFiles -ThemeName "GitHubDesktop"
+    }
     
     # Copy file to Documents for user to manually install
     $targetPath = "$env:USERPROFILE\Documents\NordShade-GitHubDesktop.less"
@@ -432,65 +518,11 @@ function Install-AllThemes {
     }
 }
 
-# Check if we need to download files
+# Create temp directory structure if running standalone
 if (-not $IsRepo) {
-    Download-Repository
-}
-
-# Check for VS Code
-if (Get-Command code -ErrorAction SilentlyContinue) {
-    $installVSCode = Read-Host "Visual Studio Code detected. Install NordShade theme? (y/n)"
-    if ($installVSCode -eq "y") {
-        Install-VSCodeTheme
+    if (-not (Test-Path $TempPath)) {
+        New-Item -Path $TempPath -ItemType Directory -Force | Out-Null
     }
-} elseif (Test-Path "$env:USERPROFILE\.vscode") {
-    $installVSCode = Read-Host "Visual Studio Code directory detected. Install NordShade theme? (y/n)"
-    if ($installVSCode -eq "y") {
-        Install-VSCodeTheme
-    }
-}
-
-# Check for Visual Studio 2022
-if (Test-Path "HKLM:\SOFTWARE\Microsoft\VisualStudio\17.0") {
-    $installVS = Read-Host "Visual Studio 2022 detected. Install NordShade theme? (y/n)"
-    if ($installVS -eq "y") {
-        Install-VisualStudioTheme
-    }
-}
-
-# Check for Windows Terminal
-if (Get-AppxPackage -Name Microsoft.WindowsTerminal -ErrorAction SilentlyContinue) {
-    $installWT = Read-Host "Windows Terminal detected. Install NordShade theme? (y/n)"
-    if ($installWT -eq "y") {
-        Install-WindowsTerminalTheme
-    }
-} elseif (Get-AppxPackage -Name Microsoft.WindowsTerminalPreview -ErrorAction SilentlyContinue) {
-    $installWT = Read-Host "Windows Terminal Preview detected. Install NordShade theme? (y/n)"
-    if ($installWT -eq "y") {
-        Install-WindowsTerminalTheme
-    }
-}
-
-# Check for Edge
-if (Test-Path "$env:PROGRAMFILES (x86)\Microsoft\Edge\Application\msedge.exe") {
-    $installEdge = Read-Host "Microsoft Edge detected. Install NordShade theme? (y/n)"
-    if ($installEdge -eq "y") {
-        Install-EdgeTheme
-    }
-}
-
-# Check for Windows 11
-if ([Environment]::OSVersion.Version.Build -ge 22000) {
-    $installWin11 = Read-Host "Windows 11 detected. Install NordShade theme? (y/n)"
-    if ($installWin11 -eq "y") {
-        Install-Windows11Theme
-    }
-}
-
-# Obsidian (ask always since it's difficult to detect)
-$installObsidian = Read-Host "Do you use Obsidian? Install NordShade theme? (y/n)"
-if ($installObsidian -eq "y") {
-    Install-ObsidianTheme
 }
 
 # Check for JetBrains IDEs
@@ -513,22 +545,6 @@ foreach ($pattern in $JetBrainsPatterns) {
     if (Get-ChildItem -Path $pattern -Directory -ErrorAction SilentlyContinue) {
         $JetBrainsDetected = $true
         break
-    }
-}
-
-if ($JetBrainsDetected) {
-    $installJetBrains = Read-Host "JetBrains IDE detected. Install NordShade theme? (y/n)"
-    if ($installJetBrains -eq "y") {
-        Install-JetBrainsTheme
-    }
-}
-
-# Clean up temp files if we downloaded them
-if (-not $IsRepo -and (Test-Path $TempPath)) {
-    $cleanUp = Read-Host "Remove temporary downloaded files? (y/n)"
-    if ($cleanUp -eq "y") {
-        Remove-Item -Path $TempPath -Recurse -Force
-        Write-Host "Temporary files removed" -ForegroundColor Green
     }
 }
 
@@ -635,6 +651,15 @@ switch ($menuChoice) {
     default {
         Write-Host "Invalid option. Exiting." -ForegroundColor Red
         exit 1
+    }
+}
+
+# Clean up temp files if we downloaded them
+if (-not $IsRepo -and (Test-Path $TempPath)) {
+    $cleanUp = Read-Host "Remove temporary downloaded files? (y/n)"
+    if ($cleanUp -eq "y") {
+        Remove-Item -Path $TempPath -Recurse -Force
+        Write-Host "Temporary files removed" -ForegroundColor Green
     }
 }
 
