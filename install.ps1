@@ -13,7 +13,7 @@ $GlobalAutoApply = $null
 
 # Add debugging flag
 $VerbosePreference = "SilentlyContinue"
-$DebugMode = $true  # Enabling debug mode to diagnose the issue
+$DebugMode = $false  # Enabling debug mode to diagnose the issue
 
 # Add debugging function
 function Write-DebugMessage {
