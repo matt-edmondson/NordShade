@@ -1,0 +1,193 @@
+/**
+ * @name NordShade
+ * @author Matt Edmondson
+ * @version 1.0.0
+ * @description A darker variant of the Nord theme for Discord
+ * @source https://github.com/matt-edmondson/NordShade
+ */
+
+:root {
+  /* Nord color palette - darker variant */
+  --nord0: #1a1e24;
+  --nord1: #242933;
+  --nord2: #2e3440;
+  --nord3: #3b4252;
+  --nord4: #434c5e;
+  --nord5: #4c566a;
+  --nord6: #d8dee9;
+  --nord7: #e5e9f0;
+  --nord8: #eceff4;
+  --nord9: #8fbcbb;
+  --nord10: #88c0d0;
+  --nord11: #81a1c1;
+  --nord12: #5e81ac;
+  --nord13: #bf616a;
+  --nord14: #d08770;
+  --nord15: #ebcb8b;
+  --nord16: #a3be8c;
+  --nord17: #b48ead;
+
+  /* Discord specific variables */
+  --background-primary: var(--nord0);
+  --background-secondary: var(--nord1);
+  --background-secondary-alt: var(--nord2);
+  --background-tertiary: var(--nord1);
+  --background-accent: var(--nord12);
+  --background-floating: var(--nord2);
+  --background-modifier-hover: rgba(76, 86, 106, 0.2);
+  --background-modifier-active: rgba(76, 86, 106, 0.3);
+  --background-modifier-selected: rgba(76, 86, 106, 0.4);
+  --background-modifier-accent: rgba(76, 86, 106, 0.15);
+
+  --text-normal: var(--nord6);
+  --text-muted: var(--nord5);
+  --text-link: var(--nord10);
+  --text-positive: var(--nord16);
+  --text-warning: var(--nord15);
+  --text-danger: var(--nord13);
+  --text-brand: var(--nord10);
+
+  --interactive-normal: var(--nord4);
+  --interactive-hover: var(--nord6);
+  --interactive-active: var(--nord8);
+  --interactive-muted: var(--nord3);
+
+  --header-primary: var(--nord7);
+  --header-secondary: var(--nord5);
+
+  --font-primary: Whitney, "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  --channels-default: var(--nord4);
+  --channel-icon: var(--nord5);
+  --channel-text-hover: var(--nord7);
+  --channel-text-active: var(--nord8);
+
+  --scrollbar-thin-thumb: var(--nord3);
+  --scrollbar-thin-track: transparent;
+  --scrollbar-auto-thumb: var(--nord3);
+  --scrollbar-auto-track: var(--nord1);
+
+  --elevation-low: 0 1px 5px 0 rgba(26, 30, 36, 0.3);
+  --elevation-high: 0 2px 10px 0 rgba(26, 30, 36, 0.7);
+
+  --guild-header-text-shadow: 0 1px 1px rgba(26, 30, 36, 0.4);
+  --activity-card-background: var(--nord2);
+  --focus-primary: var(--nord10);
+}
+
+/* Styling specific elements */
+.scroller-1JbKMe {
+  background-color: var(--background-primary);
+}
+
+.sidebar-1tnWFu {
+  background-color: var(--background-secondary);
+}
+
+.panels-3wFtMD {
+  background-color: var(--background-secondary-alt);
+}
+
+.container-2cd8Mz {
+  background-color: var(--background-primary);
+}
+
+.searchBar-jGtisZ {
+  background-color: var(--background-secondary);
+}
+
+.searchBarComponent-3N7dCG {
+  background-color: var(--background-tertiary);
+}
+
+.content-1jQy2l:before {
+  background-color: var(--background-secondary);
+}
+
+.container-1NXEtd {
+  background-color: var(--background-secondary);
+}
+
+.container-2o3qEW {
+  background-color: var(--background-tertiary);
+}
+
+/* Message area */
+.channelTextArea-1FufC0 {
+  background-color: var(--background-secondary);
+}
+
+.scrollableContainer-15eg7h {
+  background-color: var(--background-secondary);
+}
+
+/* Code blocks */
+.markup-eYLPri code {
+  background-color: var(--nord2);
+  border: 1px solid var(--nord3);
+}
+
+.codeBlockText-311wON {
+  background-color: var(--nord2);
+}
+
+/* Mention styling */
+.mention {
+  background-color: rgba(94, 129, 172, 0.3) !important;
+  color: var(--nord8) !important;
+}
+
+.mention:hover {
+  background-color: rgba(94, 129, 172, 0.5) !important;
+}
+
+/* Buttons */
+.button-f2h6uQ {
+  background-color: var(--nord3);
+  color: var(--nord6);
+}
+
+.button-f2h6uQ:hover {
+  background-color: var(--nord4);
+}
+
+/* tooltips */
+.tooltip-33Jwqe {
+  background-color: var(--nord2) !important;
+  color: var(--nord6) !important;
+}
+
+/* Status indicators */
+.status-2DiCMd {
+  background-color: var(--background-secondary);
+}
+.status-2DiCMd.online-2S838R {
+  background-color: var(--nord16);
+}
+.status-2DiCMd.idle-3DEnRT {
+  background-color: var(--nord15);
+}
+.status-2DiCMd.dnd-1_xrcq {
+  background-color: var(--nord13);
+}
+.status-2DiCMd.invisible-1X8Zq9,
+.status-2DiCMd.offline-3qoTek,
+.status-2DiCMd.unknown-Ms2zdV {
+  background-color: var(--nord4);
+}
+
+/* Custom status */
+.customStatus-1UAQAK {
+  color: var(--nord9);
+}
+
+/* Role pills */
+.role-2TIOKu {
+  background-color: var(--nord2);
+  border: 1px solid var(--nord3);
+}
+
+/* Server Discovery */
+.pageWrapper-2PwDoS {
+  background-color: var(--background-primary);
+}

@@ -41,7 +41,13 @@ function Download-Repository {
     Write-Host "Git not found. Downloading individual theme files..." -ForegroundColor Yellow
     
     # Create necessary directories
-    $themeDirs = @("VisualStudioCode", "VisualStudio2022", "WindowsTerminal", "Windows11", "MicrosoftEdge", "Obsidian")
+    $themeDirs = @(
+        "VisualStudioCode", "VisualStudio2022", "WindowsTerminal", "Windows11", 
+        "MicrosoftEdge", "Obsidian", "Neovim", "WindowsPowerShell", 
+        "JetBrainsDataGrip", "Discord", "GitHubDesktop", "Fork", 
+        "Cursor", "Blender", "Slack", "DockerDesktop", 
+        "ArduinoIDE", "UnityHub"
+    )
     foreach ($dir in $themeDirs) {
         if (-not (Test-Path "$TempPath\$dir")) {
             New-Item -Path "$TempPath\$dir" -ItemType Directory -Force | Out-Null
@@ -74,6 +80,24 @@ function Download-Repository {
     Invoke-WebRequest -Uri "$RepoURL/raw/main/Obsidian/theme.css" -OutFile "$TempPath\Obsidian\theme.css"
     Invoke-WebRequest -Uri "$RepoURL/raw/main/Obsidian/manifest.json" -OutFile "$TempPath\Obsidian\manifest.json"
     Invoke-WebRequest -Uri "$RepoURL/raw/main/Obsidian/README.md" -OutFile "$TempPath\Obsidian\README.md"
+
+    # Download Neovim files
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/Neovim/nord_shade.vim" -OutFile "$TempPath\Neovim\nord_shade.vim"
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/Neovim/install.ps1" -OutFile "$TempPath\Neovim\install.ps1"
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/Neovim/install.sh" -OutFile "$TempPath\Neovim\install.sh"
+
+    # Download JetBrains DataGrip files
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/JetBrainsDataGrip/NordShade.xml" -OutFile "$TempPath\JetBrainsDataGrip\NordShade.xml"
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/JetBrainsDataGrip/install.ps1" -OutFile "$TempPath\JetBrainsDataGrip\install.ps1"
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/JetBrainsDataGrip/install.sh" -OutFile "$TempPath\JetBrainsDataGrip\install.sh"
+
+    # Download Discord files
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/Discord/nord_shade.theme.css" -OutFile "$TempPath\Discord\nord_shade.theme.css"
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/Discord/README.md" -OutFile "$TempPath\Discord\README.md"
+
+    # Download GitHub Desktop files
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/GitHubDesktop/nord-shade.less" -OutFile "$TempPath\GitHubDesktop\nord-shade.less"
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/GitHubDesktop/README.md" -OutFile "$TempPath\GitHubDesktop\README.md"
     
     Write-Host "Theme files downloaded successfully" -ForegroundColor Green
 }
@@ -321,6 +345,50 @@ function Install-ObsidianTheme {
         Write-Host "Theme installed successfully to $obsidianThemePath" -ForegroundColor Green
         Write-Host "To activate, open Obsidian -> Settings -> Appearance -> Select 'NordShade' theme" -ForegroundColor Yellow
     }
+}
+
+function Install-NeovimTheme {
+    Write-Host "Installing NordShade for Neovim..." -ForegroundColor Yellow
+    
+    # Call the Neovim-specific installer
+    & "$NordShadeRoot\Neovim\install.ps1"
+}
+
+function Install-JetBrainsDataGripTheme {
+    Write-Host "Installing NordShade for JetBrains DataGrip..." -ForegroundColor Yellow
+    
+    # Call the DataGrip-specific installer
+    & "$NordShadeRoot\JetBrainsDataGrip\install.ps1"
+}
+
+function Install-DiscordTheme {
+    Write-Host "Installing NordShade for Discord..." -ForegroundColor Yellow
+    
+    # Check if BetterDiscord is installed
+    $betterDiscordPath = "$env:APPDATA\BetterDiscord\themes"
+    
+    if (Test-Path $betterDiscordPath) {
+        Copy-Item "$NordShadeRoot\Discord\nord_shade.theme.css" -Destination $betterDiscordPath
+        Write-Host "Theme installed to BetterDiscord themes folder: $betterDiscordPath" -ForegroundColor Green
+        Write-Host "To activate, open Discord and go to User Settings > BetterDiscord > Themes and enable NordShade" -ForegroundColor Yellow
+    } else {
+        # Just copy theme to Documents folder for manual installation
+        $targetPath = "$env:USERPROFILE\Documents\NordShade-Discord.theme.css"
+        Copy-Item "$NordShadeRoot\Discord\nord_shade.theme.css" -Destination $targetPath
+        Write-Host "BetterDiscord not detected. Theme file copied to: $targetPath" -ForegroundColor Yellow
+        Write-Host "Please refer to $NordShadeRoot\Discord\README.md for manual installation instructions" -ForegroundColor Yellow
+    }
+}
+
+function Install-GitHubDesktopTheme {
+    Write-Host "Installing NordShade for GitHub Desktop..." -ForegroundColor Yellow
+    
+    # Copy file to Documents for user to manually install
+    $targetPath = "$env:USERPROFILE\Documents\NordShade-GitHubDesktop.less"
+    Copy-Item "$NordShadeRoot\GitHubDesktop\nord-shade.less" -Destination $targetPath
+    
+    Write-Host "GitHub Desktop theme file copied to: $targetPath" -ForegroundColor Yellow
+    Write-Host "Please refer to $NordShadeRoot\GitHubDesktop\README.md for manual installation instructions" -ForegroundColor Yellow
 }
 
 # Check if we need to download files

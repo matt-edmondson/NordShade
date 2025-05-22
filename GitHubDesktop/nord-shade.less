@@ -1,0 +1,299 @@
+// NordShade theme for GitHub Desktop
+// A darker variant of the Nord theme
+
+// Nord color palette (darker variant)
+@nord0: #1a1e24;
+@nord1: #242933;
+@nord2: #2e3440;
+@nord3: #3b4252;
+@nord4: #434c5e;
+@nord5: #4c566a;
+@nord6: #d8dee9;
+@nord7: #e5e9f0;
+@nord8: #eceff4;
+@nord9: #8fbcbb;
+@nord10: #88c0d0;
+@nord11: #81a1c1;
+@nord12: #5e81ac;
+@nord13: #bf616a;
+@nord14: #d08770;
+@nord15: #ebcb8b;
+@nord16: #a3be8c;
+@nord17: #b48ead;
+
+// Main background colors
+@background: @nord0;
+@background-secondary: @nord1;
+@background-tertiary: @nord2;
+@background-active: @nord3;
+
+// Text colors
+@text: @nord6;
+@text-secondary: @nord5;
+@text-tertiary: @nord4;
+@text-link: @nord10;
+
+// Accents
+@button-background: @nord3;
+@button-hover-background: @nord4;
+@button-text: @nord6;
+@button-hover-text: @nord8;
+
+// Error & Warning
+@error: @nord13;
+@warning: @nord15;
+@success: @nord16;
+
+// Buttons
+.button-component {
+  background: @button-background;
+  color: @button-text;
+  border: none;
+
+  &:hover {
+    background: @button-hover-background;
+    color: @button-hover-text;
+  }
+
+  &.button-primary {
+    background: @nord12;
+    color: @nord8;
+
+    &:hover {
+      background: lighten(@nord12, 5%);
+    }
+  }
+
+  &.button-secondary {
+    background: @nord3;
+    color: @nord6;
+
+    &:hover {
+      background: @nord4;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    background: @nord3;
+    color: @nord4;
+  }
+}
+
+// Apply theme to the app
+.theme-light,
+.theme-dark {
+  // Base colors and backgrounds
+  --color-bg-canvas: @background;
+  --color-bg-canvas-inset: @background-secondary;
+  --color-bg-secondary: @background-secondary;
+  --color-bg-tertiary: @background-tertiary;
+  --color-bg-overlay: @background-secondary;
+  --color-bg-backdrop: rgba(0, 0, 0, 0.5);
+
+  // Borders
+  --color-border-primary: @nord3;
+  --color-border-secondary: @nord4;
+  --color-border-tertiary: @nord3;
+  --color-border-overlay: @nord3;
+
+  // Text
+  --color-text-primary: @text;
+  --color-text-secondary: @text-secondary;
+  --color-text-tertiary: @text-tertiary;
+  --color-text-link: @text-link;
+  --color-text-danger: @error;
+  --color-text-warning: @warning;
+  --color-text-success: @success;
+
+  // Buttons
+  --button-background: @button-background;
+  --button-hover-background: @button-hover-background;
+  --button-text: @button-text;
+  --button-hover-text: @button-hover-text;
+
+  // Icons
+  --color-icon-primary: @nord6;
+  --color-icon-secondary: @nord5;
+  --color-icon-tertiary: @nord4;
+  --color-icon-info: @nord10;
+  --color-icon-danger: @nord13;
+  --color-icon-warning: @nord15;
+  --color-icon-success: @nord16;
+
+  // Special components
+  --color-diff-addition-text: @nord16;
+  --color-diff-addition-bg: rgba(163, 190, 140, 0.2);
+  --color-diff-deletion-text: @nord13;
+  --color-diff-deletion-bg: rgba(191, 97, 106, 0.2);
+
+  // Commit graphs
+  --color-calendar-graph-day-bg: @nord1;
+  --color-calendar-graph-day-L1-bg: lighten(@nord16, 20%);
+  --color-calendar-graph-day-L2-bg: lighten(@nord16, 10%);
+  --color-calendar-graph-day-L3-bg: @nord16;
+  --color-calendar-graph-day-L4-bg: darken(@nord16, 10%);
+
+  // Scrollbars
+  --color-scroll-thumb: @nord3;
+  --color-scroll-track: @background;
+
+  // Focus
+  --color-state-focus-border: @nord10;
+  --color-state-focus-shadow: rgba(136, 192, 208, 0.4);
+}
+
+// Main elements
+body,
+html {
+  background-color: @background !important;
+  color: @text !important;
+}
+
+// Repository list
+.repositories-list {
+  background-color: @background-secondary !important;
+
+  .repository-list-item {
+    border-bottom: 1px solid @nord3 !important;
+
+    &:hover {
+      background-color: @background-active !important;
+    }
+
+    &.selected {
+      background-color: @background-active !important;
+    }
+  }
+}
+
+// Sidebar
+.sidebar {
+  background-color: @background-secondary !important;
+  border-right: 1px solid @nord3 !important;
+
+  .sidebar-item {
+    color: @text !important;
+
+    &:hover {
+      background-color: @background-active !important;
+    }
+
+    &.selected {
+      background-color: @background-active !important;
+    }
+  }
+}
+
+// Tabs and navigation
+.tabs-bar {
+  background-color: @background-secondary !important;
+  border-bottom: 1px solid @nord3 !important;
+
+  .tab {
+    color: @text-secondary !important;
+
+    &:hover {
+      color: @text !important;
+    }
+
+    &.active {
+      color: @text !important;
+      border-bottom-color: @nord12 !important;
+    }
+  }
+}
+
+// Commit list
+.commit-list {
+  background-color: @background !important;
+
+  .commit {
+    border-bottom: 1px solid @nord3 !important;
+
+    &:hover {
+      background-color: @background-active !important;
+    }
+
+    &.selected {
+      background-color: @background-active !important;
+    }
+  }
+
+  .commit-summary {
+    color: @text !important;
+  }
+
+  .commit-author {
+    color: @text-secondary !important;
+  }
+
+  .commit-sha {
+    color: @nord9 !important;
+  }
+}
+
+// Diff view
+.diff-view {
+  background-color: @background !important;
+
+  .diff-header {
+    background-color: @background-secondary !important;
+    border-bottom: 1px solid @nord3 !important;
+  }
+
+  .diff-hunk {
+    background-color: @background-secondary !important;
+    border: 1px solid @nord3 !important;
+  }
+
+  .diff-line {
+    &.addition {
+      background-color: var(--color-diff-addition-bg) !important;
+      color: var(--color-diff-addition-text) !important;
+    }
+
+    &.deletion {
+      background-color: var(--color-diff-deletion-bg) !important;
+      color: var(--color-diff-deletion-text) !important;
+    }
+  }
+}
+
+// Inputs and forms
+input,
+select,
+textarea {
+  background-color: @background-secondary !important;
+  border: 1px solid @nord3 !important;
+  color: @text !important;
+
+  &:focus {
+    border-color: @nord10 !important;
+    box-shadow: 0 0 0 2px var(--color-state-focus-shadow) !important;
+  }
+}
+
+// Dialogs and modals
+.dialog {
+  background-color: @background-secondary !important;
+  border: 1px solid @nord3 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+
+  .dialog-header {
+    background-color: @background-tertiary !important;
+    border-bottom: 1px solid @nord3 !important;
+  }
+
+  .dialog-footer {
+    background-color: @background-tertiary !important;
+    border-top: 1px solid @nord3 !important;
+  }
+}
+
+// Tooltips
+.tooltip {
+  background-color: @background-tertiary !important;
+  border: 1px solid @nord3 !important;
+  color: @text !important;
+}

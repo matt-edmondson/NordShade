@@ -56,7 +56,7 @@ The installation scripts will automatically apply themes for:
 - **Windows 11**: Applies the theme using the Windows theme API and installs the included wallpaper
 - **Obsidian**: Updates appearance.json to set NordShade as active theme
 
-Only Microsoft Edge requires manual steps after installation (loading the unpacked extension).
+Some applications require manual steps after installation (like loading unpacked extensions or placing files in specific locations).
 
 ### Option 2: Clone Repository and Install
 
@@ -87,3 +87,15 @@ NordShade is available for:
 - [Windows 11](./Windows11/)
 - [Microsoft Edge](./MicrosoftEdge/)
 - [Obsidian](./Obsidian/)
+- [Neovim](./Neovim/)
+- [Windows PowerShell](./WindowsPowerShell/)
+- [JetBrains DataGrip](./JetBrainsDataGrip/)
+- [Discord](./Discord/)
+- [GitHub Desktop](./GitHubDesktop/)
+- [Fork](./Fork/)
+- [Cursor](./Cursor/)
+- [Blender](./Blender/)
+- [Slack](./Slack/)
+- [Docker Desktop](./DockerDesktop/)
+- [Arduino IDE](./ArduinoIDE/)
+- [Unity Hub](./UnityHub/)

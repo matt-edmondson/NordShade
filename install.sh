@@ -38,7 +38,7 @@ download_repository() {
     echo -e "\033[33mGit not found. Downloading individual theme files...\033[0m"
     
     # Create necessary directories
-    theme_dirs=("VisualStudioCode" "Obsidian")
+    theme_dirs=("VisualStudioCode" "Obsidian" "Neovim" "JetBrainsDataGrip" "Discord" "GitHubDesktop")
     for dir in "${theme_dirs[@]}"; do
         mkdir -p "$TEMP_PATH/$dir"
     done
@@ -52,6 +52,24 @@ download_repository() {
     curl -s "$REPO_URL/raw/main/Obsidian/theme.css" -o "$TEMP_PATH/Obsidian/theme.css"
     curl -s "$REPO_URL/raw/main/Obsidian/manifest.json" -o "$TEMP_PATH/Obsidian/manifest.json"
     curl -s "$REPO_URL/raw/main/Obsidian/README.md" -o "$TEMP_PATH/Obsidian/README.md"
+    
+    # Download Neovim files
+    curl -s "$REPO_URL/raw/main/Neovim/nord_shade.vim" -o "$TEMP_PATH/Neovim/nord_shade.vim"
+    curl -s "$REPO_URL/raw/main/Neovim/install.sh" -o "$TEMP_PATH/Neovim/install.sh"
+    chmod +x "$TEMP_PATH/Neovim/install.sh"
+    
+    # Download JetBrains DataGrip files
+    curl -s "$REPO_URL/raw/main/JetBrainsDataGrip/NordShade.xml" -o "$TEMP_PATH/JetBrainsDataGrip/NordShade.xml"
+    curl -s "$REPO_URL/raw/main/JetBrainsDataGrip/install.sh" -o "$TEMP_PATH/JetBrainsDataGrip/install.sh"
+    chmod +x "$TEMP_PATH/JetBrainsDataGrip/install.sh"
+    
+    # Download Discord files
+    curl -s "$REPO_URL/raw/main/Discord/nord_shade.theme.css" -o "$TEMP_PATH/Discord/nord_shade.theme.css"
+    curl -s "$REPO_URL/raw/main/Discord/README.md" -o "$TEMP_PATH/Discord/README.md"
+    
+    # Download GitHub Desktop files
+    curl -s "$REPO_URL/raw/main/GitHubDesktop/nord-shade.less" -o "$TEMP_PATH/GitHubDesktop/nord-shade.less"
+    curl -s "$REPO_URL/raw/main/GitHubDesktop/README.md" -o "$TEMP_PATH/GitHubDesktop/README.md"
     
     echo -e "\033[32mTheme files downloaded successfully\033[0m"
 }
@@ -184,6 +202,58 @@ install_obsidian_theme() {
     fi
 }
 
+install_neovim_theme() {
+    echo -e "\033[33mInstalling NordShade for Neovim...\033[0m"
+    # Call the Neovim-specific installer
+    "$NORDSHADE_ROOT/Neovim/install.sh"
+}
+
+install_jetbrains_datagrip_theme() {
+    echo -e "\033[33mInstalling NordShade for JetBrains DataGrip...\033[0m"
+    # Call the DataGrip-specific installer
+    "$NORDSHADE_ROOT/JetBrainsDataGrip/install.sh"
+}
+
+install_discord_theme() {
+    echo -e "\033[33mInstalling NordShade for Discord...\033[0m"
+    
+    # Check for BetterDiscord locations
+    BETTER_DISCORD_PATHS=(
+        "$HOME/.config/BetterDiscord/themes"  # Linux
+        "$HOME/Library/Application Support/BetterDiscord/themes"  # macOS
+    )
+    
+    FOUND_BD=false
+    for path in "${BETTER_DISCORD_PATHS[@]}"; do
+        if [ -d "$path" ]; then
+            cp "$NORDSHADE_ROOT/Discord/nord_shade.theme.css" "$path/"
+            echo -e "\033[32mTheme installed to BetterDiscord themes folder: $path\033[0m"
+            echo -e "\033[33mTo activate, open Discord and go to User Settings > BetterDiscord > Themes and enable NordShade\033[0m"
+            FOUND_BD=true
+            break
+        fi
+    done
+    
+    if [ "$FOUND_BD" = false ]; then
+        # Just copy theme to home directory for manual installation
+        TARGET_PATH="$HOME/NordShade-Discord.theme.css"
+        cp "$NORDSHADE_ROOT/Discord/nord_shade.theme.css" "$TARGET_PATH"
+        echo -e "\033[33mBetterDiscord not detected. Theme file copied to: $TARGET_PATH\033[0m"
+        echo -e "\033[33mPlease refer to Discord theme README.md for manual installation instructions\033[0m"
+    fi
+}
+
+install_github_desktop_theme() {
+    echo -e "\033[33mInstalling NordShade for GitHub Desktop...\033[0m"
+    
+    # Copy file to home directory for user to manually install
+    TARGET_PATH="$HOME/NordShade-GitHubDesktop.less"
+    cp "$NORDSHADE_ROOT/GitHubDesktop/nord-shade.less" "$TARGET_PATH"
+    
+    echo -e "\033[33mGitHub Desktop theme file copied to: $TARGET_PATH\033[0m"
+    echo -e "\033[33mPlease refer to GitHubDesktop README.md for manual installation instructions\033[0m"
+}
+
 # Check if we need to download files
 if [ "$IS_REPO" = false ]; then
     download_repository
@@ -197,19 +267,42 @@ if command -v code &> /dev/null || [ -d "$HOME/.vscode" ]; then
     fi
 fi
 
+# Check for Neovim
+if command -v nvim &> /dev/null; then
+    read -p "Neovim detected. Install NordShade theme? (y/n): " INSTALL_NEOVIM
+    if [ "$INSTALL_NEOVIM" == "y" ]; then
+        install_neovim_theme
+    fi
+fi
+
+# Check for JetBrains DataGrip
+if command -v datagrip &> /dev/null || [ -d "$HOME/.DataGrip"* ] || [ -d "$HOME/.config/JetBrains/DataGrip"* ] || [ -d "$HOME/Library/Application Support/JetBrains/DataGrip"* ]; then
+    read -p "JetBrains DataGrip detected. Install NordShade theme? (y/n): " INSTALL_DATAGRIP
+    if [ "$INSTALL_DATAGRIP" == "y" ]; then
+        install_jetbrains_datagrip_theme
+    fi
+fi
+
+# Check for Discord
+if command -v discord &> /dev/null || [ -d "$HOME/.config/discord" ] || [ -d "$HOME/Library/Application Support/discord" ]; then
+    read -p "Discord detected. Install NordShade theme? (y/n): " INSTALL_DISCORD
+    if [ "$INSTALL_DISCORD" == "y" ]; then
+        install_discord_theme
+    fi
+fi
+
+# Check for GitHub Desktop
+if command -v github-desktop &> /dev/null || [ -d "$HOME/.config/GitHub Desktop" ] || [ -d "$HOME/Applications/GitHub Desktop.app" ]; then
+    read -p "GitHub Desktop detected. Install NordShade theme? (y/n): " INSTALL_GITHUB_DESKTOP
+    if [ "$INSTALL_GITHUB_DESKTOP" == "y" ]; then
+        install_github_desktop_theme
+    fi
+fi
+
 # Obsidian (ask always since it's difficult to detect)
-read -p "Do you use Obsidian? Install NordShade theme? (y/n): " INSTALL_OBSIDIAN
+read -p "Do you want to install NordShade theme for Obsidian? (y/n): " INSTALL_OBSIDIAN
 if [ "$INSTALL_OBSIDIAN" == "y" ]; then
     install_obsidian_theme
 fi
 
-# Clean up temp files if we downloaded them
-if [ "$IS_REPO" = false ] && [ -d "$TEMP_PATH" ]; then
-    read -p "Remove temporary downloaded files? (y/n): " CLEANUP
-    if [ "$CLEANUP" == "y" ]; then
-        rm -rf "$TEMP_PATH"
-        echo -e "\033[32mTemporary files removed\033[0m"
-    fi
-fi
-
-echo -e "\033[36mNordShade installation complete!\033[0m" 
+echo -e "\033[32mNordShade installation complete!\033[0m" 
