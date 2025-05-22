@@ -98,4 +98,4 @@ if ($MyInvocation.InvocationName -ne ".") {
 }
 
 # Export the function for import by the main installer
-Export-ModuleMember -Function Install-NeovimTheme -ErrorAction SilentlyContinue 
+Export-ModuleMember -Function Install-NeovimTheme -ErrorAction SilentlyContinue
