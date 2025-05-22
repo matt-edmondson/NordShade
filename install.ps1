@@ -10,6 +10,22 @@ $CurrentPath = Get-Location
 $PSScriptRoot = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
 $GlobalAutoApply = $null
 
+# Add debugging flag
+$VerbosePreference = "Continue"
+$DebugMode = $true
+
+# Add debugging function
+function Write-DebugMessage {
+    param(
+        [string]$Message,
+        [string]$Source = "Main"
+    )
+    
+    if ($DebugMode) {
+        Write-Host "[DEBUG:$Source] $Message" -ForegroundColor Magenta
+    }
+}
+
 # Determine if we're running from the cloned repo or standalone
 if (Test-Path "$PSScriptRoot\README.md") {
     $NordShadeRoot = $PSScriptRoot
@@ -115,15 +131,71 @@ function Download-ThemeFiles {
     }
 }
 
+# Add wrapper function for theme-specific installers
+function Invoke-ThemeInstaller {
+    param (
+        [string]$ThemeName,
+        [string]$InstallerPath,
+        [switch]$AutoApply
+    )
+    
+    Write-DebugMessage "Invoking installer: $InstallerPath" "Invoke-ThemeInstaller"
+    
+    # Create a temporary module name
+    $moduleName = "NordShade$ThemeName"
+    $tempModulePath = "$TempPath\$moduleName.psm1"
+    
+    try {
+        # Copy the installer content to a proper module file
+        Copy-Item -Path $InstallerPath -Destination $tempModulePath -Force
+        
+        # Append proper module export if needed
+        $moduleContent = Get-Content -Path $tempModulePath -Raw
+        if (-not ($moduleContent -match "Export-ModuleMember")) {
+            $functionName = "Install-${ThemeName}Theme"
+            Write-DebugMessage "Adding Export-ModuleMember for $functionName" "Invoke-ThemeInstaller"
+            Add-Content -Path $tempModulePath -Value "`nExport-ModuleMember -Function $functionName"
+        }
+        
+        # Import the temporary module
+        Import-Module -Name $tempModulePath -Force -DisableNameChecking
+        
+        # Get the install function name based on the theme name
+        $functionName = "Install-${ThemeName}Theme"
+        Write-DebugMessage "Calling function: $functionName" "Invoke-ThemeInstaller"
+        
+        # Call the function with parameters
+        if ($AutoApply) {
+            & $functionName -AutoApply -ThemeRoot "$NordShadeRoot\$ThemeName"
+        } else {
+            & $functionName -ThemeRoot "$NordShadeRoot\$ThemeName"
+        }
+        
+        # Clean up
+        Remove-Module -Name $moduleName -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path $tempModulePath -Force -ErrorAction SilentlyContinue
+        
+        return $true
+    } catch {
+        Write-Host "Error in theme installer: $_" -ForegroundColor Red
+        Write-DebugMessage "Exception details: $($_.Exception.GetType().FullName)" "Invoke-ThemeInstaller"
+        Write-DebugMessage "Exception message: $($_.Exception.Message)" "Invoke-ThemeInstaller"
+        return $false
+    }
+}
+
+# Update Install-Theme to use the wrapper
 function Install-Theme {
     param (
         [string]$ThemeName
     )
     
     Write-Host "Installing NordShade for $ThemeName..." -ForegroundColor Yellow
+    Write-DebugMessage "Starting installation for $ThemeName" "Install-Theme"
     
     # Download theme files if running standalone
     if (-not $IsRepo) {
+        Write-DebugMessage "Running in standalone mode, downloading theme files" "Install-Theme"
         $success = Download-ThemeFiles -ThemeName $ThemeName
         if (-not $success) {
             Write-Host "Failed to download theme files for $ThemeName" -ForegroundColor Red
@@ -133,16 +205,22 @@ function Install-Theme {
     
     # Check if installer script exists
     $installerPath = "$NordShadeRoot\$ThemeName\install.ps1"
+    Write-DebugMessage "Checking for installer at: $installerPath" "Install-Theme"
+    
     if (Test-Path $installerPath) {
         try {
-            # Call the theme-specific installer with the auto-apply parameter
-            if ($null -ne $GlobalAutoApply) {
-                & "$installerPath" -AutoApply:$GlobalAutoApply
+            Write-DebugMessage "Found installer, attempting to execute" "Install-Theme"
+            
+            # Use the wrapper function to invoke the installer
+            if ($null -ne $GlobalAutoApply -and $GlobalAutoApply) {
+                Invoke-ThemeInstaller -ThemeName $ThemeName -InstallerPath $installerPath -AutoApply
             } else {
-                & "$installerPath"
+                Invoke-ThemeInstaller -ThemeName $ThemeName -InstallerPath $installerPath
             }
         } catch {
             Write-Host "Error executing installer for $ThemeName`: $_" -ForegroundColor Red
+            Write-DebugMessage "Exception details: $($_.Exception.GetType().FullName)" "Install-Theme"
+            Write-DebugMessage "Exception message: $($_.Exception.Message)" "Install-Theme"
         }
     } else {
         Write-Host "Installer script not found for $ThemeName" -ForegroundColor Red
