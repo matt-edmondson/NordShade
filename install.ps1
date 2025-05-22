@@ -38,10 +38,16 @@ function Get-IndexJson {
     
     try {
         Invoke-WebRequest -Uri $indexUrl -OutFile $indexPath
-        $script:IndexJson = Get-Content -Path $indexPath -Raw | ConvertFrom-Json
-        return $script:IndexJson
+        
+        try {
+            $script:IndexJson = Get-Content -Path $indexPath -Raw | ConvertFrom-Json
+            return $script:IndexJson
+        } catch {
+            Write-Host "Failed to parse index.json: $_" -ForegroundColor Red
+            return $null
+        }
     } catch {
-        Write-Host "Failed to download index.json: ${_}" -ForegroundColor Red
+        Write-Host "Failed to download index.json: $_" -ForegroundColor Red
         return $null
     }
 }
@@ -64,37 +70,47 @@ function Download-ThemeFiles {
         return $false
     }
     
-    $baseUrl = $indexJson.baseUrl
-    $themeFiles = $indexJson.themes.$ThemeName
-    
-    if ($null -eq $themeFiles) {
-        Write-Host "Theme $ThemeName not found in index.json" -ForegroundColor Red
-        return $false
-    }
-    
-    # Download each file listed for this theme
-    foreach ($file in $themeFiles) {
-        $fileUrl = "$baseUrl/$ThemeName/$file"
-        $filePath = "$TempPath\$ThemeName\$file"
-        Write-Host "  - $file" -ForegroundColor Gray
-        try {
-            Invoke-WebRequest -Uri $fileUrl -OutFile $filePath
-            
-            # Make script files executable (PowerShell doesn't need this but keeping for consistency)
-            if ($file -like "*.ps1" -or $file -like "*.sh") {
-                # PowerShell scripts don't need to be marked executable
-            }
-        } catch {
-            Write-Host "    Failed to download ${file}: ${_}" -ForegroundColor Red
+    try {
+        $baseUrl = $indexJson.baseUrl
+        $themeFiles = $null
+        
+        # Safely access theme files
+        if ($indexJson.themes -and $indexJson.themes.PSObject.Properties[$ThemeName]) {
+            $themeFiles = $indexJson.themes.$ThemeName
         }
-    }
-    
-    # Check if installer script exists
-    $installerPath = "$TempPath\$ThemeName\install.ps1"
-    if (Test-Path $installerPath) {
-        return $true
-    } else {
-        Write-Host "Installer script not found for $ThemeName" -ForegroundColor Red
+        
+        if ($null -eq $themeFiles) {
+            Write-Host "Theme $ThemeName not found in index.json" -ForegroundColor Red
+            return $false
+        }
+        
+        # Download each file listed for this theme
+        foreach ($file in $themeFiles) {
+            $fileUrl = "$baseUrl/$ThemeName/$file"
+            $filePath = "$TempPath\$ThemeName\$file"
+            Write-Host "  - $file" -ForegroundColor Gray
+            try {
+                Invoke-WebRequest -Uri $fileUrl -OutFile $filePath
+                
+                # Make script files executable (PowerShell doesn't need this but keeping for consistency)
+                if ($file -like "*.ps1" -or $file -like "*.sh") {
+                    # PowerShell scripts don't need to be marked executable
+                }
+            } catch {
+                Write-Host "    Failed to download ${file}: $_" -ForegroundColor Red
+            }
+        }
+        
+        # Check if installer script exists
+        $installerPath = "$TempPath\$ThemeName\install.ps1"
+        if (Test-Path $installerPath) {
+            return $true
+        } else {
+            Write-Host "Installer script not found for $ThemeName" -ForegroundColor Red
+            return $false
+        }
+    } catch {
+        Write-Host "Error processing theme files for $ThemeName`: $_" -ForegroundColor Red
         return $false
     }
 }
@@ -118,8 +134,16 @@ function Install-Theme {
     # Check if installer script exists
     $installerPath = "$NordShadeRoot\$ThemeName\install.ps1"
     if (Test-Path $installerPath) {
-        # Call the theme-specific installer with the auto-apply parameter
-        & "$installerPath" -AutoApply:$GlobalAutoApply
+        try {
+            # Call the theme-specific installer with the auto-apply parameter
+            if ($null -ne $GlobalAutoApply) {
+                & "$installerPath" -AutoApply:$GlobalAutoApply
+            } else {
+                & "$installerPath"
+            }
+        } catch {
+            Write-Host "Error executing installer for $ThemeName`: $_" -ForegroundColor Red
+        }
     } else {
         Write-Host "Installer script not found for $ThemeName" -ForegroundColor Red
     }
