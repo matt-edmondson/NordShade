@@ -13,7 +13,7 @@ $GlobalAutoApply = $null
 
 # Add debugging flag
 $VerbosePreference = "SilentlyContinue"
-$DebugMode = $false
+$DebugMode = $true  # Enabling debug mode to diagnose the issue
 
 # Add debugging function
 function Write-DebugMessage {
@@ -148,6 +148,23 @@ function Invoke-ThemeInstaller {
     
     Write-DebugMessage "Invoking installer: $InstallerPath" "Invoke-ThemeInstaller"
     
+    # First check if the installer script exists and has the expected content
+    if (-not (Test-Path $InstallerPath)) {
+        Write-Host "Installer script not found: $InstallerPath" -ForegroundColor Red
+        return $false
+    }
+    
+    # Check if the installer script contains the expected function
+    $installerContent = Get-Content -Path $InstallerPath -Raw -ErrorAction SilentlyContinue
+    $expectedFunctionName = "Install-${ThemeName}Theme"
+    
+    Write-DebugMessage "Checking for function: $expectedFunctionName" "Invoke-ThemeInstaller"
+    
+    if (-not ($installerContent -match "function\s+$expectedFunctionName")) {
+        Write-Host "Installer script does not contain the expected function: $expectedFunctionName" -ForegroundColor Red
+        return $false
+    }
+    
     # Create a temporary module name
     $moduleName = "NordShade$ThemeName"
     $tempModulePath = "$TempPath\$moduleName.psm1"
@@ -155,6 +172,7 @@ function Invoke-ThemeInstaller {
     try {
         # Copy the installer content to a proper module file
         Copy-Item -Path $InstallerPath -Destination $tempModulePath -Force
+        Write-DebugMessage "Copied installer to module path: $tempModulePath" "Invoke-ThemeInstaller"
         
         # Append proper module export if needed
         $moduleContent = Get-Content -Path $tempModulePath -Raw
@@ -164,8 +182,23 @@ function Invoke-ThemeInstaller {
             Add-Content -Path $tempModulePath -Value "`nExport-ModuleMember -Function $functionName"
         }
         
-        # Import the temporary module
-        Import-Module -Name $tempModulePath -Force -DisableNameChecking
+        # Import the temporary module with verbose output
+        Write-DebugMessage "Importing module: $tempModulePath" "Invoke-ThemeInstaller"
+        $importResult = Import-Module -Name $tempModulePath -Force -DisableNameChecking -PassThru -ErrorVariable importError
+        
+        if ($importError) {
+            Write-Host "Error importing module: $importError" -ForegroundColor Red
+            return $false
+        }
+        
+        # Verify the function was imported
+        $functionExists = Get-Command -Name $functionName -ErrorAction SilentlyContinue
+        if (-not $functionExists) {
+            Write-Host "Function $functionName was not imported with the module" -ForegroundColor Red
+            # Try to directly dot-source the file as a fallback
+            Write-DebugMessage "Trying direct dot-sourcing as fallback" "Invoke-ThemeInstaller"
+            . $InstallerPath
+        }
         
         # Get the install function name based on the theme name
         $functionName = "Install-${ThemeName}Theme"
@@ -179,6 +212,7 @@ function Invoke-ThemeInstaller {
         }
         
         # Clean up
+        Write-DebugMessage "Cleaning up module: $moduleName" "Invoke-ThemeInstaller"
         Remove-Module -Name $moduleName -Force -ErrorAction SilentlyContinue
         Remove-Item -Path $tempModulePath -Force -ErrorAction SilentlyContinue
         
@@ -187,7 +221,28 @@ function Invoke-ThemeInstaller {
         Write-Host "Error in theme installer: $_" -ForegroundColor Red
         Write-DebugMessage "Exception details: $($_.Exception.GetType().FullName)" "Invoke-ThemeInstaller"
         Write-DebugMessage "Exception message: $($_.Exception.Message)" "Invoke-ThemeInstaller"
-        return $false
+        
+        # Try direct dot-sourcing as a fallback
+        try {
+            Write-Host "Attempting fallback installation method..." -ForegroundColor Yellow
+            Write-DebugMessage "Direct dot-sourcing: $InstallerPath" "Invoke-ThemeInstaller"
+            . $InstallerPath
+            
+            # Try to invoke the function directly
+            $functionName = "Install-${ThemeName}Theme"
+            Write-DebugMessage "Directly calling: $functionName" "Invoke-ThemeInstaller"
+            
+            if ($AutoApply) {
+                & $functionName -AutoApply -ThemeRoot "$NordShadeRoot\$ThemeName"
+            } else {
+                & $functionName -ThemeRoot "$NordShadeRoot\$ThemeName"
+            }
+            
+            return $true
+        } catch {
+            Write-Host "Fallback installation also failed: $_" -ForegroundColor Red
+            return $false
+        }
     }
 }
 
