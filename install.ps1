@@ -144,9 +144,18 @@ function Invoke-ThemeInstaller {
         [Parameter(Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         [string]$ThemeName,
-        [string]$InstallerPath,
+        [string]$InstallerPath = "",
         [switch]$AutoApply
     )
+    
+    # Ensure InstallerPath is not empty
+    if ([string]::IsNullOrWhiteSpace($InstallerPath)) {
+        if ($IsRepo) {
+            $InstallerPath = Join-Path -Path $NordShadeRoot -ChildPath "$ThemeName\install.ps1"
+        } else {
+            $InstallerPath = Join-Path -Path $TempPath -ChildPath "$ThemeName\install.ps1"
+        }
+    }
     
     Write-DebugMessage "Invoking installer: $InstallerPath for theme: $ThemeName" "Invoke-ThemeInstaller"
     

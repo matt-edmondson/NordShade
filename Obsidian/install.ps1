@@ -100,4 +100,9 @@ if ($MyInvocation.InvocationName -ne ".") {
 }
 
 # Export the function for import by the main installer
-Export-ModuleMember -Function Install-ObsidianTheme -ErrorAction SilentlyContinue 
+try {
+    # Only attempt to export if we're inside a module context
+    Export-ModuleMember -Function Install-ObsidianTheme -ErrorAction Stop
+} catch {
+    # Silently ignore export error when running directly
+} 
