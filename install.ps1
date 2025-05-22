@@ -1,9 +1,81 @@
 # NordShade Installation Script for Windows
 # This script detects and installs NordShade themes for available applications
+# Can be run without cloning the repository
 
 $ErrorActionPreference = "SilentlyContinue"
-$NordShadeRoot = $PSScriptRoot
-Write-Host "Installing NordShade themes from $NordShadeRoot" -ForegroundColor Cyan
+$RepoURL = "https://github.com/matt-edmondson/NordShade"
+$RepoAPIURL = "https://api.github.com/repos/matt-edmondson/NordShade/contents"
+$TempPath = "$env:TEMP\NordShade"
+$CurrentPath = Get-Location
+$PSScriptRoot = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
+
+# Determine if we're running from the cloned repo or standalone
+if (Test-Path "$PSScriptRoot\README.md") {
+    $NordShadeRoot = $PSScriptRoot
+    $IsRepo = $true
+    Write-Host "Installing NordShade themes from local repository at $NordShadeRoot" -ForegroundColor Cyan
+} else {
+    $NordShadeRoot = $TempPath
+    $IsRepo = $false
+    Write-Host "Running standalone installation - will download required files" -ForegroundColor Cyan
+}
+
+function Download-Repository {
+    Write-Host "Downloading NordShade repository files..." -ForegroundColor Yellow
+    
+    # Create temp directory if it doesn't exist
+    if (-not (Test-Path $TempPath)) {
+        New-Item -Path $TempPath -ItemType Directory -Force | Out-Null
+    }
+    
+    # Check for git and use it if available
+    if (Get-Command git -ErrorAction SilentlyContinue) {
+        Write-Host "Using git to clone repository..." -ForegroundColor Yellow
+        Push-Location $env:TEMP
+        & git clone --depth 1 $RepoURL
+        Pop-Location
+        return
+    }
+    
+    # Fall back to downloading individual theme files
+    Write-Host "Git not found. Downloading individual theme files..." -ForegroundColor Yellow
+    
+    # Create necessary directories
+    $themeDirs = @("VisualStudioCode", "VisualStudio2022", "WindowsTerminal", "Windows11", "MicrosoftEdge", "Obsidian")
+    foreach ($dir in $themeDirs) {
+        if (-not (Test-Path "$TempPath\$dir")) {
+            New-Item -Path "$TempPath\$dir" -ItemType Directory -Force | Out-Null
+        }
+    }
+    
+    # Download VS Code files
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudioCode/NordShade.json" -OutFile "$TempPath\VisualStudioCode\NordShade.json"
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudioCode/package.json" -OutFile "$TempPath\VisualStudioCode\package.json"
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudioCode/README.md" -OutFile "$TempPath\VisualStudioCode\README.md"
+    
+    # Download VS2022 files
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudio2022/NordShade.vssettings" -OutFile "$TempPath\VisualStudio2022\NordShade.vssettings"
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudio2022/README.md" -OutFile "$TempPath\VisualStudio2022\README.md"
+    
+    # Download Windows Terminal files
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/WindowsTerminal/NordShade.json" -OutFile "$TempPath\WindowsTerminal\NordShade.json"
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/WindowsTerminal/README.md" -OutFile "$TempPath\WindowsTerminal\README.md"
+    
+    # Download Windows 11 files
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/Windows11/theme.deskthemepack" -OutFile "$TempPath\Windows11\theme.deskthemepack"
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/Windows11/README.md" -OutFile "$TempPath\Windows11\README.md"
+    
+    # Download Edge files
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/MicrosoftEdge/manifest.json" -OutFile "$TempPath\MicrosoftEdge\manifest.json"
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/MicrosoftEdge/README.md" -OutFile "$TempPath\MicrosoftEdge\README.md"
+    
+    # Download Obsidian files
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/Obsidian/theme.css" -OutFile "$TempPath\Obsidian\theme.css"
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/Obsidian/manifest.json" -OutFile "$TempPath\Obsidian\manifest.json"
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/Obsidian/README.md" -OutFile "$TempPath\Obsidian\README.md"
+    
+    Write-Host "Theme files downloaded successfully" -ForegroundColor Green
+}
 
 function Install-VSCodeTheme {
     $vsCodeExtPath = "$env:USERPROFILE\.vscode\extensions\nordshade-theme"
@@ -144,6 +216,11 @@ function Install-ObsidianTheme {
     Write-Host "To activate, open Obsidian -> Settings -> Appearance -> Select 'NordShade' theme" -ForegroundColor Green
 }
 
+# Check if we need to download files
+if (-not $IsRepo) {
+    Download-Repository
+}
+
 # Check for VS Code
 if (Get-Command code -ErrorAction SilentlyContinue) {
     $installVSCode = Read-Host "Visual Studio Code detected. Install NordShade theme? (y/n)"
@@ -198,6 +275,15 @@ if ([Environment]::OSVersion.Version.Build -ge 22000) {
 $installObsidian = Read-Host "Do you use Obsidian? Install NordShade theme? (y/n)"
 if ($installObsidian -eq "y") {
     Install-ObsidianTheme
+}
+
+# Clean up temp files if we downloaded them
+if (-not $IsRepo -and (Test-Path $TempPath)) {
+    $cleanUp = Read-Host "Remove temporary downloaded files? (y/n)"
+    if ($cleanUp -eq "y") {
+        Remove-Item -Path $TempPath -Recurse -Force
+        Write-Host "Temporary files removed" -ForegroundColor Green
+    }
 }
 
 Write-Host "NordShade installation complete!" -ForegroundColor Cyan 

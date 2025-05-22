@@ -20,6 +20,50 @@ A darker variant of the [Nord](https://www.nordtheme.com/) color scheme.
 | Dark Gray   | `#3B4252` | `#2A2F3B` | -28.7% |
 | Bright Gray | `#E5E9F0` | `#CACFD6` | -11.3% |
 
+## Installation
+
+### Option 1: Download and Install with One Command
+
+You can install NordShade themes without cloning the repository using our installation scripts:
+
+#### Windows (PowerShell)
+
+```powershell
+irm https://raw.githubusercontent.com/matt-edmondson/NordShade/main/install.ps1 | iex
+```
+
+#### macOS/Linux (Bash)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/matt-edmondson/NordShade/main/install.sh | bash
+```
+
+The scripts will:
+
+1. Detect your installed applications
+2. Download necessary theme files (or use git clone if available)
+3. Install themes for applications you choose
+4. Clean up temporary files after installation
+
+### Option 2: Clone Repository and Install
+
+If you prefer to examine the files first:
+
+```bash
+# Clone the repository
+git clone https://github.com/matt-edmondson/NordShade.git
+
+# Change to NordShade directory
+cd NordShade
+
+# Run installation script
+# On Windows
+./install.ps1
+
+# On macOS/Linux
+./install.sh
+```
+
 ## Themes
 
 NordShade is available for:
