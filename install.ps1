@@ -40,64 +40,59 @@ function Download-Repository {
     # Fall back to downloading individual theme files
     Write-Host "Git not found. Downloading individual theme files..." -ForegroundColor Yellow
     
-    # Create necessary directories
-    $themeDirs = @(
-        "VisualStudioCode", "VisualStudio2022", "WindowsTerminal", "Windows11", 
-        "MicrosoftEdge", "Obsidian", "Neovim", "WindowsPowerShell", 
-        "JetBrainsDataGrip", "Discord", "GitHubDesktop", "Fork", 
-        "Cursor", "Blender", "Slack", "DockerDesktop", 
-        "ArduinoIDE", "UnityHub"
-    )
-    foreach ($dir in $themeDirs) {
-        if (-not (Test-Path "$TempPath\$dir")) {
-            New-Item -Path "$TempPath\$dir" -ItemType Directory -Force | Out-Null
+    # First, download the index.json file
+    $indexUrl = "$RepoURL/raw/main/index.json"
+    $indexPath = "$TempPath\index.json"
+    
+    try {
+        Invoke-WebRequest -Uri $indexUrl -OutFile $indexPath
+        $indexJson = Get-Content -Path $indexPath -Raw | ConvertFrom-Json
+        $baseUrl = $indexJson.baseUrl
+        
+        # Loop through each theme in the index
+        foreach ($themeName in $indexJson.themes.PSObject.Properties.Name) {
+            Write-Host "Downloading files for $themeName..." -ForegroundColor Yellow
+            
+            # Create directory for theme if it doesn't exist
+            if (-not (Test-Path "$TempPath\$themeName")) {
+                New-Item -Path "$TempPath\$themeName" -ItemType Directory -Force | Out-Null
+            }
+            
+            # Download each file listed for this theme
+            foreach ($file in $indexJson.themes.$themeName) {
+                $fileUrl = "$baseUrl/$themeName/$file"
+                $filePath = "$TempPath\$themeName\$file"
+                Write-Host "  - $file" -ForegroundColor Gray
+                try {
+                    Invoke-WebRequest -Uri $fileUrl -OutFile $filePath
+                } catch {
+                    Write-Host "    Failed to download $file: $_" -ForegroundColor Red
+                }
+            }
         }
+    } catch {
+        Write-Host "Failed to download or parse index.json: $_" -ForegroundColor Red
+        Write-Host "Falling back to essential files..." -ForegroundColor Yellow
+        
+        # Create basic theme directories in case index.json fails
+        $themeDirs = @(
+            "VisualStudioCode", "VisualStudio2022", "WindowsTerminal", "Windows11", 
+            "MicrosoftEdge", "Obsidian", "Neovim", "JetBrains", "Discord", "GitHubDesktop"
+        )
+        foreach ($dir in $themeDirs) {
+            if (-not (Test-Path "$TempPath\$dir")) {
+                New-Item -Path "$TempPath\$dir" -ItemType Directory -Force | Out-Null
+            }
+        }
+        
+        # Essential files minimum required
+        Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudioCode/NordShade.json" -OutFile "$TempPath\VisualStudioCode\NordShade.json"
+        Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudio2022/NordShade.vssettings" -OutFile "$TempPath\VisualStudio2022\NordShade.vssettings"
+        Invoke-WebRequest -Uri "$RepoURL/raw/main/WindowsTerminal/NordShade.json" -OutFile "$TempPath\WindowsTerminal\NordShade.json"
+        Invoke-WebRequest -Uri "$RepoURL/raw/main/Windows11/theme.deskthemepack" -OutFile "$TempPath\Windows11\theme.deskthemepack"
+        Invoke-WebRequest -Uri "$RepoURL/raw/main/Neovim/nord_shade.vim" -OutFile "$TempPath\Neovim\nord_shade.vim"
+        Invoke-WebRequest -Uri "$RepoURL/raw/main/JetBrains/NordShade.xml" -OutFile "$TempPath\JetBrains\NordShade.xml"
     }
-    
-    # Download VS Code files
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudioCode/NordShade.json" -OutFile "$TempPath\VisualStudioCode\NordShade.json"
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudioCode/package.json" -OutFile "$TempPath\VisualStudioCode\package.json"
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudioCode/README.md" -OutFile "$TempPath\VisualStudioCode\README.md"
-    
-    # Download VS2022 files
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudio2022/NordShade.vssettings" -OutFile "$TempPath\VisualStudio2022\NordShade.vssettings"
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/VisualStudio2022/README.md" -OutFile "$TempPath\VisualStudio2022\README.md"
-    
-    # Download Windows Terminal files
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/WindowsTerminal/NordShade.json" -OutFile "$TempPath\WindowsTerminal\NordShade.json"
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/WindowsTerminal/README.md" -OutFile "$TempPath\WindowsTerminal\README.md"
-    
-    # Download Windows 11 files
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/Windows11/theme.deskthemepack" -OutFile "$TempPath\Windows11\theme.deskthemepack"
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/Windows11/README.md" -OutFile "$TempPath\Windows11\README.md"
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/Windows11/NordShade.jpg" -OutFile "$TempPath\Windows11\NordShade.jpg"
-    
-    # Download Edge files
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/MicrosoftEdge/manifest.json" -OutFile "$TempPath\MicrosoftEdge\manifest.json"
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/MicrosoftEdge/README.md" -OutFile "$TempPath\MicrosoftEdge\README.md"
-    
-    # Download Obsidian files
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/Obsidian/theme.css" -OutFile "$TempPath\Obsidian\theme.css"
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/Obsidian/manifest.json" -OutFile "$TempPath\Obsidian\manifest.json"
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/Obsidian/README.md" -OutFile "$TempPath\Obsidian\README.md"
-
-    # Download Neovim files
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/Neovim/nord_shade.vim" -OutFile "$TempPath\Neovim\nord_shade.vim"
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/Neovim/install.ps1" -OutFile "$TempPath\Neovim\install.ps1"
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/Neovim/install.sh" -OutFile "$TempPath\Neovim\install.sh"
-
-    # Download JetBrains DataGrip files
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/JetBrainsDataGrip/NordShade.xml" -OutFile "$TempPath\JetBrainsDataGrip\NordShade.xml"
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/JetBrainsDataGrip/install.ps1" -OutFile "$TempPath\JetBrainsDataGrip\install.ps1"
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/JetBrainsDataGrip/install.sh" -OutFile "$TempPath\JetBrainsDataGrip\install.sh"
-
-    # Download Discord files
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/Discord/nord_shade.theme.css" -OutFile "$TempPath\Discord\nord_shade.theme.css"
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/Discord/README.md" -OutFile "$TempPath\Discord\README.md"
-
-    # Download GitHub Desktop files
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/GitHubDesktop/nord-shade.less" -OutFile "$TempPath\GitHubDesktop\nord-shade.less"
-    Invoke-WebRequest -Uri "$RepoURL/raw/main/GitHubDesktop/README.md" -OutFile "$TempPath\GitHubDesktop\README.md"
     
     Write-Host "Theme files downloaded successfully" -ForegroundColor Green
 }
@@ -354,11 +349,11 @@ function Install-NeovimTheme {
     & "$NordShadeRoot\Neovim\install.ps1"
 }
 
-function Install-JetBrainsDataGripTheme {
-    Write-Host "Installing NordShade for JetBrains DataGrip..." -ForegroundColor Yellow
+function Install-JetBrainsTheme {
+    Write-Host "Installing NordShade for JetBrains IDEs..." -ForegroundColor Yellow
     
-    # Call the DataGrip-specific installer
-    & "$NordShadeRoot\JetBrainsDataGrip\install.ps1"
+    # Call the JetBrains-specific installer
+    & "$NordShadeRoot\JetBrains\install.ps1"
 }
 
 function Install-DiscordTheme {
@@ -389,6 +384,52 @@ function Install-GitHubDesktopTheme {
     
     Write-Host "GitHub Desktop theme file copied to: $targetPath" -ForegroundColor Yellow
     Write-Host "Please refer to $NordShadeRoot\GitHubDesktop\README.md for manual installation instructions" -ForegroundColor Yellow
+}
+
+function Install-AllThemes {
+    Write-Host "Installing NordShade for all detected applications..." -ForegroundColor Yellow
+    
+    # Check and install for each supported application
+    if (Get-Command code -ErrorAction SilentlyContinue) {
+        Install-VSCodeTheme
+    }
+    
+    if (Get-Command devenv -ErrorAction SilentlyContinue) {
+        Install-VisualStudioTheme
+    }
+    
+    if (Test-Path "$env:LOCALAPPDATA\Microsoft\Windows Terminal") {
+        Install-WindowsTerminalTheme
+    }
+    
+    if ([Environment]::OSVersion.Version.Major -ge 10) {
+        Install-Windows11Theme
+    }
+    
+    if (Test-Path "$env:PROGRAMFILES\Microsoft\Edge\Application\msedge.exe" -or Test-Path "${env:PROGRAMFILES(x86)}\Microsoft\Edge\Application\msedge.exe") {
+        Install-EdgeTheme
+    }
+    
+    if (Test-Path "$env:APPDATA\obsidian") {
+        Install-ObsidianTheme
+    }
+    
+    if (Get-Command nvim -ErrorAction SilentlyContinue) {
+        Install-NeovimTheme
+    }
+    
+    # Check for JetBrains IDEs
+    if ($JetBrainsDetected) {
+        Install-JetBrainsTheme
+    }
+    
+    if (Test-Path "$env:APPDATA\BetterDiscord" -or Test-Path "$env:APPDATA\BetterDiscord\plugins" -or Test-Path "$env:APPDATA\Vencord") {
+        Install-DiscordTheme
+    }
+    
+    if (Test-Path "$env:LOCALAPPDATA\GitHubDesktop") {
+        Install-GitHubDesktopTheme
+    }
 }
 
 # Check if we need to download files
@@ -452,12 +493,148 @@ if ($installObsidian -eq "y") {
     Install-ObsidianTheme
 }
 
+# Check for JetBrains IDEs
+$JetBrainsPatterns = @(
+    "$env:APPDATA\JetBrains\*",
+    "$env:USERPROFILE\.JetBrains\*",
+    "$env:USERPROFILE\.IntelliJIdea*",
+    "$env:USERPROFILE\.WebStorm*",
+    "$env:USERPROFILE\.PyCharm*",
+    "$env:USERPROFILE\.CLion*",
+    "$env:USERPROFILE\.DataGrip*",
+    "$env:USERPROFILE\.GoLand*",
+    "$env:USERPROFILE\.PhpStorm*",
+    "$env:USERPROFILE\.Rider*",
+    "$env:USERPROFILE\.RubyMine*"
+)
+
+$JetBrainsDetected = $false
+foreach ($pattern in $JetBrainsPatterns) {
+    if (Get-ChildItem -Path $pattern -Directory -ErrorAction SilentlyContinue) {
+        $JetBrainsDetected = $true
+        break
+    }
+}
+
+if ($JetBrainsDetected) {
+    $installJetBrains = Read-Host "JetBrains IDE detected. Install NordShade theme? (y/n)"
+    if ($installJetBrains -eq "y") {
+        Install-JetBrainsTheme
+    }
+}
+
 # Clean up temp files if we downloaded them
 if (-not $IsRepo -and (Test-Path $TempPath)) {
     $cleanUp = Read-Host "Remove temporary downloaded files? (y/n)"
     if ($cleanUp -eq "y") {
         Remove-Item -Path $TempPath -Recurse -Force
         Write-Host "Temporary files removed" -ForegroundColor Green
+    }
+}
+
+# Present the menu to the user
+Write-Host "===== NordShade Theme Installer =====" -ForegroundColor Cyan
+Write-Host "===================================" -ForegroundColor Cyan
+Write-Host "Please select an option:"
+Write-Host "1) Install for all detected applications"
+Write-Host "2) Pick and choose which applications to install for"
+Write-Host "3) Exit"
+$menuChoice = Read-Host "Enter your choice (1-3)"
+
+switch ($menuChoice) {
+    "1" {
+        Install-AllThemes
+    }
+    "2" {
+        # Individual application checks
+        
+        # Check for VS Code
+        if (Get-Command code -ErrorAction SilentlyContinue) {
+            $installVSCode = Read-Host "Visual Studio Code detected. Install NordShade theme? (y/n)"
+            if ($installVSCode -eq "y") {
+                Install-VSCodeTheme
+            }
+        }
+        
+        # Check for VS 2022
+        if (Get-Command devenv -ErrorAction SilentlyContinue) {
+            $installVS2022 = Read-Host "Visual Studio 2022 detected. Install NordShade theme? (y/n)"
+            if ($installVS2022 -eq "y") {
+                Install-VisualStudioTheme
+            }
+        }
+        
+        # Check for Windows Terminal
+        if (Test-Path "$env:LOCALAPPDATA\Microsoft\Windows Terminal") {
+            $installWT = Read-Host "Windows Terminal detected. Install NordShade theme? (y/n)"
+            if ($installWT -eq "y") {
+                Install-WindowsTerminalTheme
+            }
+        }
+        
+        # Check for Windows 11
+        if ([Environment]::OSVersion.Version.Major -ge 10) {
+            $installW11 = Read-Host "Windows 11 detected. Install NordShade theme? (y/n)"
+            if ($installW11 -eq "y") {
+                Install-Windows11Theme
+            }
+        }
+        
+        # Check for Microsoft Edge
+        if (Test-Path "$env:PROGRAMFILES\Microsoft\Edge\Application\msedge.exe" -or Test-Path "${env:PROGRAMFILES(x86)}\Microsoft\Edge\Application\msedge.exe") {
+            $installEdge = Read-Host "Microsoft Edge detected. Install NordShade theme? (y/n)"
+            if ($installEdge -eq "y") {
+                Install-EdgeTheme
+            }
+        }
+        
+        # Check for Obsidian
+        if (Test-Path "$env:APPDATA\obsidian") {
+            $installObsidian = Read-Host "Obsidian detected. Install NordShade theme? (y/n)"
+            if ($installObsidian -eq "y") {
+                Install-ObsidianTheme
+            }
+        }
+        
+        # Check for Neovim
+        if (Get-Command nvim -ErrorAction SilentlyContinue) {
+            $installNeovim = Read-Host "Neovim detected. Install NordShade theme? (y/n)"
+            if ($installNeovim -eq "y") {
+                Install-NeovimTheme
+            }
+        }
+        
+        # Check for JetBrains IDEs
+        if ($JetBrainsDetected) {
+            $installJetBrains = Read-Host "JetBrains IDE detected. Install NordShade theme? (y/n)"
+            if ($installJetBrains -eq "y") {
+                Install-JetBrainsTheme
+            }
+        }
+        
+        # Check for Discord (BetterDiscord/Vencord)
+        if (Test-Path "$env:APPDATA\BetterDiscord" -or Test-Path "$env:APPDATA\BetterDiscord\plugins" -or Test-Path "$env:APPDATA\Vencord") {
+            $installDiscord = Read-Host "Discord with BetterDiscord/Vencord detected. Install NordShade theme? (y/n)"
+            if ($installDiscord -eq "y") {
+                Install-DiscordTheme
+            }
+        }
+        
+        # Check for GitHub Desktop
+        if (Test-Path "$env:LOCALAPPDATA\GitHubDesktop") {
+            $installGitHub = Read-Host "GitHub Desktop detected. Install NordShade theme? (y/n)"
+            if ($installGitHub -eq "y") {
+                Install-GitHubDesktopTheme
+            }
+        }
+    }
+    "3" {
+        Write-Host "Exiting NordShade installer. No changes were made." -ForegroundColor Green
+        exit 0
+    }
+    default {
+        Write-Host "Invalid option. Exiting." -ForegroundColor Red
+        exit 1
     }
 }
 
