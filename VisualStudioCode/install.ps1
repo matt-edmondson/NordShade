@@ -33,32 +33,93 @@ function Install-VisualStudioCodeTheme {
     if ($AutoApply) {
         $settingsPath = "${env:APPDATA}\Code\User\settings.json"
         
-        # Create settings.json if it doesn't exist
-        if (-not (Test-Path $settingsPath)) {
-            New-Item -Path $settingsPath -ItemType File -Force | Out-Null
-            Set-Content -Path $settingsPath -Value "{}"
+        # Backup settings first if they exist
+        if (Test-Path $settingsPath) {
+            $backupPath = "$settingsPath.backup"
+            Copy-Item -Path $settingsPath -Destination $backupPath -Force
+            Write-Host "Settings backup created at $backupPath" -ForegroundColor Green
         }
         
-        # Read current settings
         try {
-            $settings = Get-Content -Path $settingsPath -Raw | ConvertFrom-Json
-        } catch {
-            # If the file is invalid JSON, create a new settings object
-            $settings = [PSCustomObject]@{}
+            # Approach 1: Try to read and modify the existing settings.json
+            if (Test-Path $settingsPath) {
+                # Read current settings as text first to ensure proper handling
+                $settingsContent = Get-Content -Path $settingsPath -Raw -ErrorAction Stop
+                
+                # If the file is empty or only whitespace, initialize with empty JSON object
+                if ([string]::IsNullOrWhiteSpace($settingsContent)) {
+                    $settingsContent = "{}"
+                }
+                
+                try {
+                    # Parse the JSON and modify it
+                    $settings = $settingsContent | ConvertFrom-Json -ErrorAction Stop
+                    
+                    # Handle both PSCustomObject and Hashtable depending on PowerShell version
+                    if ($settings -is [PSCustomObject]) {
+                        # Check if the property exists before removing it
+                        if ($settings.PSObject.Properties['workbench.colorTheme']) {
+                            $settings.PSObject.Properties.Remove('workbench.colorTheme')
+                        }
+                        # Add the property
+                        $settings | Add-Member -Type NoteProperty -Name 'workbench.colorTheme' -Value 'NordShade' -Force
+                    } else {
+                        # It's a hashtable
+                        $settings['workbench.colorTheme'] = 'NordShade'
+                    }
+                    
+                    # Convert to formatted JSON with careful handling to avoid syntax errors
+                    $newContent = $settings | ConvertTo-Json -Depth 20 -ErrorAction Stop
+                    
+                    # Write the file with UTF8 encoding without BOM
+                    $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $false
+                    [System.IO.File]::WriteAllText($settingsPath, $newContent, $Utf8NoBomEncoding)
+                    
+                    Write-Host "VS Code settings updated to use NordShade theme!" -ForegroundColor Green
+                }
+                catch {
+                    # If JSON parsing fails, try approach 2
+                    throw "Error parsing settings.json: $_"
+                }
+            }
+            else {
+                # Approach 2: Create a new settings.json with minimal content
+                $newSettingsDir = Split-Path -Parent $settingsPath
+                if (-not (Test-Path $newSettingsDir)) {
+                    New-Item -Path $newSettingsDir -ItemType Directory -Force | Out-Null
+                }
+                
+                $newSettings = @{
+                    "workbench.colorTheme" = "NordShade"
+                }
+                
+                $newContent = $newSettings | ConvertTo-Json -Depth 1 -ErrorAction Stop
+                
+                # Write the file with UTF8 encoding without BOM
+                $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $false
+                [System.IO.File]::WriteAllText($settingsPath, $newContent, $Utf8NoBomEncoding)
+                
+                Write-Host "Created new VS Code settings.json with NordShade theme!" -ForegroundColor Green
+            }
+            
+            Write-Host "VS Code theme automatically applied!" -ForegroundColor Green
+            Write-Host "To revert changes, use the backup file or manually change the theme in VS Code settings." -ForegroundColor Yellow
         }
-
-        # Backup settings
-        Copy-Item -Path $settingsPath -Destination "$settingsPath.backup" -Force
-        
-        # Update workbench color theme
-        $settings.PSObject.Properties.Remove('workbench.colorTheme')
-        $settings | Add-Member -Type NoteProperty -Name 'workbench.colorTheme' -Value 'NordShade'
-        
-        # Save settings
-        $settings | ConvertTo-Json -Depth 20 | Set-Content -Path $settingsPath
-        
-        Write-Host "VS Code theme automatically applied!" -ForegroundColor Green
-        Write-Host "Settings backup created at $settingsPath.backup" -ForegroundColor Green
+        catch {
+            Write-Host "Error updating VS Code settings: $_" -ForegroundColor Red
+            Write-Host "Please apply the theme manually through VS Code settings." -ForegroundColor Yellow
+            
+            # Try to restore backup if we created one and the operation failed
+            if (Test-Path $backupPath) {
+                try {
+                    Copy-Item -Path $backupPath -Destination $settingsPath -Force
+                    Write-Host "Original settings restored from backup." -ForegroundColor Green
+                }
+                catch {
+                    Write-Host "Failed to restore backup settings: $_" -ForegroundColor Red
+                }
+            }
+        }
     } else {
         Write-Host "Theme installed but not automatically applied." -ForegroundColor Yellow
         Write-Host "To apply the theme manually, go to VS Code -> Settings -> Color Theme and select 'NordShade'" -ForegroundColor Yellow
