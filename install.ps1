@@ -91,7 +91,35 @@ function Install-VSCodeTheme {
     Copy-Item "$NordShadeRoot\VisualStudioCode\package.json" -Destination $vsCodeExtPath
     Copy-Item "$NordShadeRoot\VisualStudioCode\README.md" -Destination $vsCodeExtPath
     
-    Write-Host "VS Code theme installed successfully. Please restart VS Code and select the theme." -ForegroundColor Green
+    # Automatically apply the theme by updating settings.json
+    $settingsPath = "$env:APPDATA\Code\User\settings.json"
+    
+    # Create settings.json if it doesn't exist
+    if (-not (Test-Path $settingsPath)) {
+        New-Item -Path $settingsPath -ItemType File -Force | Out-Null
+        Set-Content -Path $settingsPath -Value "{}"
+    }
+    
+    # Read current settings
+    try {
+        $settings = Get-Content -Path $settingsPath -Raw | ConvertFrom-Json
+    } catch {
+        # If the file is invalid JSON, create a new settings object
+        $settings = [PSCustomObject]@{}
+    }
+
+    # Backup settings
+    Copy-Item -Path $settingsPath -Destination "$settingsPath.backup" -Force
+    
+    # Update workbench color theme
+    $settings.PSObject.Properties.Remove('workbench.colorTheme')
+    $settings | Add-Member -Type NoteProperty -Name 'workbench.colorTheme' -Value 'NordShade'
+    
+    # Save settings
+    $settings | ConvertTo-Json -Depth 20 | Set-Content -Path $settingsPath
+    
+    Write-Host "VS Code theme installed and automatically applied!" -ForegroundColor Green
+    Write-Host "Settings backup created at $settingsPath.backup" -ForegroundColor Green
 }
 
 function Install-VisualStudioTheme {
@@ -101,9 +129,24 @@ function Install-VisualStudioTheme {
     $settingsPath = "$env:USERPROFILE\Documents\NordShade.vssettings"
     Copy-Item "$NordShadeRoot\VisualStudio2022\NordShade.vssettings" -Destination $settingsPath
     
-    Write-Host "Visual Studio settings file copied to $settingsPath" -ForegroundColor Green
-    Write-Host "To apply the theme, open Visual Studio -> Tools -> Import and Export Settings..." -ForegroundColor Green
-    Write-Host "Then select 'Import selected environment settings' and browse to the file location." -ForegroundColor Green
+    # Try to apply settings automatically using devenv.exe
+    $vsPath = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\VisualStudio\SxS\VS7" -Name "17.0" -ErrorAction SilentlyContinue)."17.0"
+    if ($vsPath) {
+        $devenvPath = Join-Path $vsPath "Common7\IDE\devenv.exe"
+        if (Test-Path $devenvPath) {
+            Write-Host "Attempting to apply Visual Studio settings automatically..." -ForegroundColor Yellow
+            Start-Process -FilePath $devenvPath -ArgumentList "/resetuserdata", "/command", "Tools.ImportandExportSettings /import:""$settingsPath""" -Wait
+            Write-Host "Visual Studio theme should be applied. If Visual Studio was running, you may need to restart it." -ForegroundColor Green
+        } else {
+            Write-Host "Could not find Visual Studio executable. Theme installed but must be applied manually." -ForegroundColor Yellow
+            Write-Host "To apply the theme, open Visual Studio -> Tools -> Import and Export Settings..." -ForegroundColor Yellow
+            Write-Host "Then select 'Import selected environment settings' and browse to: $settingsPath" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "Visual Studio settings file copied to $settingsPath" -ForegroundColor Green
+        Write-Host "To apply the theme, open Visual Studio -> Tools -> Import and Export Settings..." -ForegroundColor Yellow
+        Write-Host "Then select 'Import selected environment settings' and browse to the file location." -ForegroundColor Yellow
+    }
 }
 
 function Install-WindowsTerminalTheme {
@@ -144,11 +187,16 @@ function Install-WindowsTerminalTheme {
     # Add NordShade scheme
     $settings.schemes += $nordShadeScheme
     
+    # Apply theme to all profiles
+    if ($settings.profiles -and $settings.profiles.defaults) {
+        # Set the colorScheme property in defaults to apply to all profiles
+        $settings.profiles.defaults | Add-Member -Type NoteProperty -Name colorScheme -Value "NordShade" -Force
+    }
+    
     # Save settings
     $settings | ConvertTo-Json -Depth 20 | Set-Content -Path $terminalSettingsPath
     
-    Write-Host "Windows Terminal theme installed successfully." -ForegroundColor Green
-    Write-Host "To activate, open Windows Terminal settings and select 'NordShade' as your color scheme." -ForegroundColor Green
+    Write-Host "Windows Terminal theme installed and applied as the default color scheme!" -ForegroundColor Green
 }
 
 function Install-Windows11Theme {
@@ -164,9 +212,36 @@ function Install-Windows11Theme {
     $themePath = "$env:USERPROFILE\AppData\Local\Microsoft\Windows\Themes\NordShade.theme"
     Copy-Item "$NordShadeRoot\Windows11\theme.deskthemepack" -Destination $themePath
     
-    Write-Host "Windows 11 theme installed to $themePath" -ForegroundColor Green
-    Write-Host "Note: You'll need to provide a wallpaper named 'NordShade.jpg' in $themeDir" -ForegroundColor Yellow
-    Write-Host "To apply the theme, double-click the theme file or go to Settings -> Personalization -> Themes" -ForegroundColor Green
+    # Copy the wallpaper if it exists
+    $wallpaperSource = "$NordShadeRoot\Windows11\NordShade.jpg"
+    $wallpaperDest = "$themeDir\NordShade.jpg"
+    
+    if (Test-Path $wallpaperSource) {
+        Write-Host "Copying NordShade wallpaper..." -ForegroundColor Yellow
+        Copy-Item $wallpaperSource -Destination $wallpaperDest -Force
+        Write-Host "Wallpaper installed to $wallpaperDest" -ForegroundColor Green
+    } else {
+        Write-Host "NordShade wallpaper not found at $wallpaperSource" -ForegroundColor Red
+        Write-Host "Please provide a wallpaper named 'NordShade.jpg' in $themeDir" -ForegroundColor Yellow
+    }
+    
+    # Try to apply the theme automatically
+    Write-Host "Attempting to apply Windows 11 theme automatically..." -ForegroundColor Yellow
+    
+    try {
+        # Apply the theme using rundll32
+        Start-Process -FilePath "rundll32.exe" -ArgumentList "desk.cpl,InstallTheme $themePath" -Wait
+        Write-Host "Windows 11 theme applied successfully!" -ForegroundColor Green
+    } catch {
+        Write-Host "Could not apply theme automatically. Theme installed to $themePath" -ForegroundColor Yellow
+        Write-Host "To apply the theme, double-click the theme file or go to Settings -> Personalization -> Themes" -ForegroundColor Yellow
+    }
+    
+    if (Test-Path $wallpaperDest) {
+        Write-Host "Wallpaper is ready and will be used by the theme" -ForegroundColor Green
+    } else {
+        Write-Host "Note: You'll need to provide a wallpaper named 'NordShade.jpg' in $themeDir" -ForegroundColor Yellow
+    }
 }
 
 function Install-EdgeTheme {
@@ -182,7 +257,10 @@ function Install-EdgeTheme {
     Copy-Item "$NordShadeRoot\MicrosoftEdge\manifest.json" -Destination $edgeExtPath
     
     Write-Host "Microsoft Edge theme prepared at $edgeExtPath" -ForegroundColor Green
-    Write-Host "To install, open Edge -> edge://extensions/ -> Enable Developer Mode -> Load Unpacked -> Select the folder" -ForegroundColor Green
+    Write-Host "Edge themes require manual installation. To install:" -ForegroundColor Yellow
+    Write-Host "1. Open Edge and go to edge://extensions/" -ForegroundColor Yellow
+    Write-Host "2. Enable Developer Mode (toggle in the bottom-left)" -ForegroundColor Yellow
+    Write-Host "3. Click 'Load unpacked' and select the folder: $edgeExtPath" -ForegroundColor Yellow
 }
 
 function Install-ObsidianTheme {
@@ -212,8 +290,36 @@ function Install-ObsidianTheme {
     Copy-Item "$NordShadeRoot\Obsidian\theme.css" -Destination $obsidianThemePath
     Copy-Item "$NordShadeRoot\Obsidian\manifest.json" -Destination $obsidianThemePath
     
-    Write-Host "Obsidian theme installed successfully to $obsidianThemePath" -ForegroundColor Green
-    Write-Host "To activate, open Obsidian -> Settings -> Appearance -> Select 'NordShade' theme" -ForegroundColor Green
+    # Try to auto-apply theme by updating appearance.json
+    $appearanceJsonPath = "$vaultPath\.obsidian\appearance.json"
+    
+    if (Test-Path $appearanceJsonPath) {
+        # Backup appearance.json
+        Copy-Item -Path $appearanceJsonPath -Destination "$appearanceJsonPath.backup" -Force
+        Write-Host "Backed up Obsidian appearance settings to $appearanceJsonPath.backup" -ForegroundColor Green
+        
+        try {
+            # Read appearance.json
+            $appearanceConfig = Get-Content -Path $appearanceJsonPath -Raw | ConvertFrom-Json
+            
+            # Update theme setting
+            $appearanceConfig.theme = "NordShade"
+            
+            # Save updated config
+            $appearanceConfig | ConvertTo-Json -Depth 20 | Set-Content -Path $appearanceJsonPath
+            
+            Write-Host "Obsidian theme installed and applied successfully!" -ForegroundColor Green
+            Write-Host "If Obsidian is currently running, you may need to restart it for changes to take effect." -ForegroundColor Yellow
+        } catch {
+            Write-Host "Could not automatically apply Obsidian theme." -ForegroundColor Yellow
+            Write-Host "Theme installed successfully to $obsidianThemePath" -ForegroundColor Green
+            Write-Host "To activate, open Obsidian -> Settings -> Appearance -> Select 'NordShade' theme" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "Could not find Obsidian appearance settings. Theme has been installed but must be activated manually." -ForegroundColor Yellow
+        Write-Host "Theme installed successfully to $obsidianThemePath" -ForegroundColor Green
+        Write-Host "To activate, open Obsidian -> Settings -> Appearance -> Select 'NordShade' theme" -ForegroundColor Yellow
+    }
 }
 
 # Check if we need to download files

@@ -63,9 +63,11 @@ install_vscode_theme() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS
         VSCODE_PATH="$HOME/.vscode/extensions/nordshade-theme"
+        SETTINGS_PATH="$HOME/Library/Application Support/Code/User/settings.json"
     else
         # Linux
         VSCODE_PATH="$HOME/.vscode/extensions/nordshade-theme"
+        SETTINGS_PATH="$HOME/.config/Code/User/settings.json"
     fi
     
     # Create directory if it doesn't exist
@@ -76,7 +78,44 @@ install_vscode_theme() {
     cp "$NORDSHADE_ROOT/VisualStudioCode/package.json" "$VSCODE_PATH/"
     cp "$NORDSHADE_ROOT/VisualStudioCode/README.md" "$VSCODE_PATH/"
     
-    echo -e "\033[32mVS Code theme installed successfully. Please restart VS Code and select the theme.\033[0m"
+    # Automatically apply the theme by updating settings.json
+    # Create settings directory if it doesn't exist
+    mkdir -p "$(dirname "$SETTINGS_PATH")"
+    
+    # Create settings.json if it doesn't exist
+    if [ ! -f "$SETTINGS_PATH" ]; then
+        echo "{}" > "$SETTINGS_PATH"
+    fi
+    
+    # Backup settings
+    cp "$SETTINGS_PATH" "$SETTINGS_PATH.backup"
+    
+    # Update settings to use NordShade theme
+    # Use jq if available, otherwise use a more basic approach
+    if command -v jq &> /dev/null; then
+        # Using jq for proper JSON manipulation
+        jq '.["workbench.colorTheme"] = "NordShade"' "$SETTINGS_PATH" > "$SETTINGS_PATH.tmp" && mv "$SETTINGS_PATH.tmp" "$SETTINGS_PATH"
+    else
+        # Attempt a basic manipulation if jq is not available
+        # Check if file has workbench.colorTheme already
+        if grep -q "workbench.colorTheme" "$SETTINGS_PATH"; then
+            # Replace existing setting
+            sed -i.bak 's/"workbench.colorTheme"\s*:\s*"[^"]*"/"workbench.colorTheme": "NordShade"/g' "$SETTINGS_PATH"
+        else
+            # Add new setting
+            content=$(cat "$SETTINGS_PATH")
+            if [ "$content" = "{}" ]; then
+                # Empty settings file
+                echo '{"workbench.colorTheme": "NordShade"}' > "$SETTINGS_PATH"
+            else
+                # Non-empty settings file, add setting
+                sed -i.bak 's/{/{\"workbench.colorTheme\": \"NordShade\", /g' "$SETTINGS_PATH"
+            fi
+        fi
+    fi
+    
+    echo -e "\033[32mVS Code theme installed and automatically applied!\033[0m"
+    echo -e "\033[32mSettings backup created at $SETTINGS_PATH.backup\033[0m"
 }
 
 install_obsidian_theme() {
@@ -111,8 +150,38 @@ install_obsidian_theme() {
     cp "$NORDSHADE_ROOT/Obsidian/theme.css" "$THEME_PATH/"
     cp "$NORDSHADE_ROOT/Obsidian/manifest.json" "$THEME_PATH/"
     
-    echo -e "\033[32mObsidian theme installed successfully to $THEME_PATH\033[0m"
-    echo -e "\033[32mTo activate, open Obsidian -> Settings -> Appearance -> Select 'NordShade' theme\033[0m"
+    # Try to auto-apply theme by updating appearance.json
+    APPEARANCE_PATH="$VAULT_PATH/.obsidian/appearance.json"
+    
+    if [ -f "$APPEARANCE_PATH" ]; then
+        # Backup appearance.json
+        cp "$APPEARANCE_PATH" "$APPEARANCE_PATH.backup"
+        echo -e "\033[32mBacked up Obsidian appearance settings to $APPEARANCE_PATH.backup\033[0m"
+        
+        # Update theme setting
+        if command -v jq &> /dev/null; then
+            # Using jq for proper JSON manipulation
+            jq '.theme = "NordShade"' "$APPEARANCE_PATH" > "$APPEARANCE_PATH.tmp" && mv "$APPEARANCE_PATH.tmp" "$APPEARANCE_PATH"
+            echo -e "\033[32mObsidian theme installed and applied successfully!\033[0m"
+        else
+            # Attempt a basic manipulation if jq is not available
+            if grep -q "\"theme\"" "$APPEARANCE_PATH"; then
+                # Replace existing theme setting
+                sed -i.bak 's/"theme"\s*:\s*"[^"]*"/"theme": "NordShade"/g' "$APPEARANCE_PATH"
+                echo -e "\033[32mObsidian theme installed and applied successfully!\033[0m"
+            else
+                # Add theme setting
+                sed -i.bak 's/{/{\"theme\": \"NordShade\", /g' "$APPEARANCE_PATH"
+                echo -e "\033[32mObsidian theme installed and applied successfully!\033[0m"
+            fi
+        fi
+        
+        echo -e "\033[33mIf Obsidian is currently running, you may need to restart it for changes to take effect.\033[0m"
+    else
+        echo -e "\033[33mCould not find Obsidian appearance settings. Theme has been installed but must be activated manually.\033[0m"
+        echo -e "\033[32mTheme installed successfully to $THEME_PATH\033[0m"
+        echo -e "\033[33mTo activate, open Obsidian -> Settings -> Appearance -> Select 'NordShade' theme\033[0m"
+    fi
 }
 
 # Check if we need to download files

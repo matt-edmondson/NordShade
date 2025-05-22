@@ -43,7 +43,20 @@ The scripts will:
 1. Detect your installed applications
 2. Download necessary theme files (or use git clone if available)
 3. Install themes for applications you choose
-4. Clean up temporary files after installation
+4. **Automatically apply the themes where possible**
+5. Clean up temporary files after installation
+
+#### Automatic Theme Application
+
+The installation scripts will automatically apply themes for:
+
+- **Visual Studio Code**: Updates settings.json with the NordShade theme
+- **Windows Terminal**: Sets NordShade as the default color scheme for all profiles
+- **Visual Studio 2022**: Attempts to apply theme using the VS command line interface
+- **Windows 11**: Applies the theme using the Windows theme API and installs the included wallpaper
+- **Obsidian**: Updates appearance.json to set NordShade as active theme
+
+Only Microsoft Edge requires manual steps after installation (loading the unpacked extension).
 
 ### Option 2: Clone Repository and Install
 
