@@ -9,18 +9,18 @@ function Install-Windows11Theme {
     Write-Host "Installing NordShade for Windows 11..." -ForegroundColor Yellow
     
     # Create destination folder for the wallpaper
-    $themeDir = "$env:WINDIR\Resources\Themes\NordShade"
+    $themeDir = "${env:WINDIR}\Resources\Themes\NordShade"
     if (-not (Test-Path $themeDir)) {
         New-Item -Path $themeDir -ItemType Directory -Force | Out-Null
     }
     
     # Copy theme file
-    $themePath = "$env:USERPROFILE\AppData\Local\Microsoft\Windows\Themes\NordShade.theme"
+    $themePath = "${env:USERPROFILE}\AppData\Local\Microsoft\Windows\Themes\NordShade.theme"
     Copy-Item "$ThemeRoot\theme.deskthemepack" -Destination $themePath
     
     # Copy the wallpaper if it exists
-    $wallpaperSource = "$ThemeRoot\NordShade.jpg"
-    $wallpaperDest = "$themeDir\NordShade.jpg"
+    $wallpaperSource = "${ThemeRoot}\NordShade.jpg"
+    $wallpaperDest = "${themeDir}\NordShade.jpg"
     
     if (Test-Path $wallpaperSource) {
         Write-Host "Copying NordShade wallpaper..." -ForegroundColor Yellow

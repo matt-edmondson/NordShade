@@ -10,7 +10,7 @@ function Install-VisualStudioTheme {
     Write-Host "Installing NordShade for Visual Studio 2022..." -ForegroundColor Yellow
     
     # Copy settings file to a location the user can easily access
-    $settingsPath = "$env:USERPROFILE\Documents\NordShade.vssettings"
+    $settingsPath = "${env:USERPROFILE}\Documents\NordShade.vssettings"
     Copy-Item "$ThemeRoot\NordShade.vssettings" -Destination $settingsPath
     
     Write-Host "Visual Studio settings file copied to $settingsPath" -ForegroundColor Green

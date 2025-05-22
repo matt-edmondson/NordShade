@@ -9,7 +9,7 @@ function Install-EdgeTheme {
     Write-Host "Installing NordShade for Microsoft Edge..." -ForegroundColor Yellow
     
     # Check if Edge is installed
-    $edgePath = "$env:PROGRAMFILES\Microsoft\Edge\Application\msedge.exe"
+    $edgePath = "${env:PROGRAMFILES}\Microsoft\Edge\Application\msedge.exe"
     $edgePath86 = "${env:PROGRAMFILES(x86)}\Microsoft\Edge\Application\msedge.exe"
     
     if (-not (Test-Path $edgePath) -and -not (Test-Path $edgePath86)) {
@@ -19,7 +19,7 @@ function Install-EdgeTheme {
     }
     
     # Create extension directory
-    $edgeExtPath = "$env:USERPROFILE\EdgeExtensions\NordShade"
+    $edgeExtPath = "${env:USERPROFILE}\EdgeExtensions\NordShade"
     if (-not (Test-Path $edgeExtPath)) {
         New-Item -Path $edgeExtPath -ItemType Directory -Force | Out-Null
     }

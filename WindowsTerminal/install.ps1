@@ -10,8 +10,8 @@ function Install-WindowsTerminalTheme {
     Write-Host "Installing NordShade for Windows Terminal..." -ForegroundColor Yellow
     
     # Get Windows Terminal settings path
-    $settingsPath = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
-    $settingsPathPreview = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe\LocalState\settings.json"
+    $settingsPath = "${env:LOCALAPPDATA}\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+    $settingsPathPreview = "${env:LOCALAPPDATA}\Packages\Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe\LocalState\settings.json"
     
     # Check if settings.json exists in either location
     if (Test-Path $settingsPath) {
@@ -27,7 +27,7 @@ function Install-WindowsTerminalTheme {
     try {
         $settings = Get-Content -Path $terminalSettingsPath -Raw | ConvertFrom-Json
     } catch {
-        Write-Host "Error reading Windows Terminal settings: $_" -ForegroundColor Red
+        Write-Host "Error reading Windows Terminal settings: ${_}" -ForegroundColor Red
         return
     }
     

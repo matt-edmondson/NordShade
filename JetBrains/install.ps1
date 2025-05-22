@@ -5,27 +5,27 @@
 # Look for JetBrains config folders in the expected locations
 $JetBrainsConfigFolders = @(
     # Windows paths
-    "$env:APPDATA\JetBrains\*",
-    "$env:USERPROFILE\.JetBrains\*",
+    "${env:APPDATA}\JetBrains\*",
+    "${env:USERPROFILE}\.JetBrains\*",
     # Direct product paths
-    "$env:USERPROFILE\.IntelliJIdea*",
-    "$env:USERPROFILE\.WebStorm*",
-    "$env:USERPROFILE\.PyCharm*",
-    "$env:USERPROFILE\.CLion*",
-    "$env:USERPROFILE\.DataGrip*",
-    "$env:USERPROFILE\.GoLand*",
-    "$env:USERPROFILE\.PhpStorm*",
-    "$env:USERPROFILE\.Rider*",
-    "$env:USERPROFILE\.RubyMine*",
-    "$env:APPDATA\JetBrains\IntelliJIdea*",
-    "$env:APPDATA\JetBrains\WebStorm*",
-    "$env:APPDATA\JetBrains\PyCharm*",
-    "$env:APPDATA\JetBrains\CLion*",
-    "$env:APPDATA\JetBrains\DataGrip*",
-    "$env:APPDATA\JetBrains\GoLand*",
-    "$env:APPDATA\JetBrains\PhpStorm*",
-    "$env:APPDATA\JetBrains\Rider*",
-    "$env:APPDATA\JetBrains\RubyMine*"
+    "${env:USERPROFILE}\.IntelliJIdea*",
+    "${env:USERPROFILE}\.WebStorm*",
+    "${env:USERPROFILE}\.PyCharm*",
+    "${env:USERPROFILE}\.CLion*",
+    "${env:USERPROFILE}\.DataGrip*",
+    "${env:USERPROFILE}\.GoLand*",
+    "${env:USERPROFILE}\.PhpStorm*",
+    "${env:USERPROFILE}\.Rider*",
+    "${env:USERPROFILE}\.RubyMine*",
+    "${env:APPDATA}\JetBrains\IntelliJIdea*",
+    "${env:APPDATA}\JetBrains\WebStorm*",
+    "${env:APPDATA}\JetBrains\PyCharm*",
+    "${env:APPDATA}\JetBrains\CLion*",
+    "${env:APPDATA}\JetBrains\DataGrip*",
+    "${env:APPDATA}\JetBrains\GoLand*",
+    "${env:APPDATA}\JetBrains\PhpStorm*",
+    "${env:APPDATA}\JetBrains\Rider*",
+    "${env:APPDATA}\JetBrains\RubyMine*"
 )
 
 # Find all matching config folders

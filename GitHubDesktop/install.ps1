@@ -9,16 +9,16 @@ function Install-GitHubDesktopTheme {
     Write-Host "Installing NordShade for GitHub Desktop..." -ForegroundColor Yellow
     
     # Check if GitHub Desktop is installed
-    $desktopPath = "$env:LOCALAPPDATA\GitHubDesktop"
+    $desktopPath = "${env:LOCALAPPDATA}\GitHubDesktop"
     
     if (Test-Path $desktopPath) {
         Write-Host "GitHub Desktop detected..." -ForegroundColor Green
         
         # Look for the correct path for less files
         $themesPaths = @(
-            "$env:APPDATA\GitHub Desktop\*\styles\ui\theme-*.less",
-            "$env:USERPROFILE\.config\GitHub Desktop\*\styles\ui\theme-*.less",
-            "$env:LOCALAPPDATA\GitHub Desktop\app-*\resources\app\styles\themes"
+            "${env:APPDATA}\GitHub Desktop\*\styles\ui\theme-*.less",
+            "${env:USERPROFILE}\.config\GitHub Desktop\*\styles\ui\theme-*.less",
+            "${env:LOCALAPPDATA}\GitHub Desktop\app-*\resources\app\styles\themes"
         )
         
         $themeDirFound = $false
@@ -43,7 +43,7 @@ function Install-GitHubDesktopTheme {
             Write-Host "Then restart GitHub Desktop." -ForegroundColor Yellow
         } else {
             # Couldn't find themes folder - just copy to Documents
-            $fallbackPath = "$env:USERPROFILE\Documents\NordShade-GitHubDesktop.less"
+            $fallbackPath = "${env:USERPROFILE}\Documents\NordShade-GitHubDesktop.less"
             Copy-Item "$ThemeRoot\nord-shade.less" -Destination $fallbackPath
             Write-Host "Could not locate GitHub Desktop themes folder." -ForegroundColor Red
             Write-Host "Theme file copied to: $fallbackPath" -ForegroundColor Yellow
@@ -51,7 +51,7 @@ function Install-GitHubDesktopTheme {
         }
     } else {
         # GitHub Desktop not found - just copy to Documents
-        $fallbackPath = "$env:USERPROFILE\Documents\NordShade-GitHubDesktop.less"
+        $fallbackPath = "${env:USERPROFILE}\Documents\NordShade-GitHubDesktop.less"
         Copy-Item "$ThemeRoot\nord-shade.less" -Destination $fallbackPath
         Write-Host "GitHub Desktop not detected." -ForegroundColor Red
         Write-Host "Theme file copied to: $fallbackPath" -ForegroundColor Yellow

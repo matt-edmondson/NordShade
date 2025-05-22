@@ -2,7 +2,7 @@
 # Installs the NordShade theme for Neovim
 
 # Define paths
-$NeovimColorsDir = "$env:LOCALAPPDATA\nvim\colors"
+$NeovimColorsDir = "${env:LOCALAPPDATA}\nvim\colors"
 
 # Create colors directory if it doesn't exist
 if (-not (Test-Path $NeovimColorsDir)) {
@@ -12,8 +12,8 @@ if (-not (Test-Path $NeovimColorsDir)) {
 
 # Copy theme file to colors directory
 try {
-    $sourceThemePath = "$PSScriptRoot\nord_shade.vim"
-    $destThemePath = "$NeovimColorsDir\nord_shade.vim"
+    $sourceThemePath = "${PSScriptRoot}\nord_shade.vim"
+    $destThemePath = "${NeovimColorsDir}\nord_shade.vim"
     
     Write-Host "Installing NordShade theme for Neovim..." -ForegroundColor Cyan
     Copy-Item -Path $sourceThemePath -Destination $destThemePath -Force
@@ -25,5 +25,5 @@ try {
     Write-Host "`nFor init.lua:" -ForegroundColor Yellow
     Write-Host 'vim.cmd("colorscheme nord_shade")' -ForegroundColor White
 } catch {
-    Write-Host "Error installing NordShade theme for Neovim: $_" -ForegroundColor Red
+    Write-Host "Error installing NordShade theme for Neovim: ${_}" -ForegroundColor Red
 } 

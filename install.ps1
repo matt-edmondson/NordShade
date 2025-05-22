@@ -5,7 +5,7 @@
 $ErrorActionPreference = "SilentlyContinue"
 $RepoURL = "https://github.com/matt-edmondson/NordShade"
 $RepoAPIURL = "https://api.github.com/repos/matt-edmondson/NordShade/contents"
-$TempPath = "$env:TEMP\NordShade"
+$TempPath = "${env:TEMP}\NordShade"
 $CurrentPath = Get-Location
 $PSScriptRoot = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
 $GlobalAutoApply = $null
@@ -41,7 +41,7 @@ function Get-IndexJson {
         $script:IndexJson = Get-Content -Path $indexPath -Raw | ConvertFrom-Json
         return $script:IndexJson
     } catch {
-        Write-Host "Failed to download index.json: $_" -ForegroundColor Red
+        Write-Host "Failed to download index.json: ${_}" -ForegroundColor Red
         return $null
     }
 }
@@ -85,7 +85,7 @@ function Download-ThemeFiles {
                 # PowerShell scripts don't need to be marked executable
             }
         } catch {
-            Write-Host "    Failed to download $file: $_" -ForegroundColor Red
+            Write-Host "    Failed to download ${file}: ${_}" -ForegroundColor Red
         }
     }
     
@@ -167,8 +167,8 @@ function Detect-Applications {
     }
     
     # Check for Cursor IDE
-    if ((Test-Path "$env:LOCALAPPDATA\Programs\Cursor\cursor.exe") -or 
-        (Test-Path "$env:APPDATA\cursor-editor")) {
+    if ((Test-Path "${env:LOCALAPPDATA}\Programs\Cursor\cursor.exe") -or 
+        (Test-Path "${env:APPDATA}\cursor-editor")) {
         if ($availableThemes -contains "Cursor") {
             $detectedApps["Cursor"] = "Cursor IDE"
         }
@@ -182,7 +182,7 @@ function Detect-Applications {
     }
     
     # Check for Windows Terminal
-    if (Test-Path "$env:LOCALAPPDATA\Microsoft\Windows Terminal") {
+    if (Test-Path "${env:LOCALAPPDATA}\Microsoft\Windows Terminal") {
         if ($availableThemes -contains "WindowsTerminal") {
             $detectedApps["WindowsTerminal"] = "Windows Terminal"
         }
@@ -196,7 +196,7 @@ function Detect-Applications {
     }
     
     # Check for Microsoft Edge
-    if (Test-Path "$env:PROGRAMFILES\Microsoft\Edge\Application\msedge.exe" -or 
+    if (Test-Path "${env:PROGRAMFILES}\Microsoft\Edge\Application\msedge.exe" -or 
         Test-Path "${env:PROGRAMFILES(x86)}\Microsoft\Edge\Application\msedge.exe") {
         if ($availableThemes -contains "MicrosoftEdge") {
             $detectedApps["MicrosoftEdge"] = "Microsoft Edge"
@@ -204,7 +204,7 @@ function Detect-Applications {
     }
     
     # Check for Obsidian
-    if (Test-Path "$env:APPDATA\obsidian") {
+    if (Test-Path "${env:APPDATA}\obsidian") {
         if ($availableThemes -contains "Obsidian") {
             $detectedApps["Obsidian"] = "Obsidian"
         }
@@ -219,17 +219,17 @@ function Detect-Applications {
     
     # Check for JetBrains IDEs
     $JetBrainsPatterns = @(
-        "$env:APPDATA\JetBrains\*",
-        "$env:USERPROFILE\.JetBrains\*",
-        "$env:USERPROFILE\.IntelliJIdea*",
-        "$env:USERPROFILE\.WebStorm*",
-        "$env:USERPROFILE\.PyCharm*",
-        "$env:USERPROFILE\.CLion*",
-        "$env:USERPROFILE\.DataGrip*",
-        "$env:USERPROFILE\.GoLand*",
-        "$env:USERPROFILE\.PhpStorm*",
-        "$env:USERPROFILE\.Rider*",
-        "$env:USERPROFILE\.RubyMine*"
+        "${env:APPDATA}\JetBrains\*",
+        "${env:USERPROFILE}\.JetBrains\*",
+        "${env:USERPROFILE}\.IntelliJIdea*",
+        "${env:USERPROFILE}\.WebStorm*",
+        "${env:USERPROFILE}\.PyCharm*",
+        "${env:USERPROFILE}\.CLion*",
+        "${env:USERPROFILE}\.DataGrip*",
+        "${env:USERPROFILE}\.GoLand*",
+        "${env:USERPROFILE}\.PhpStorm*",
+        "${env:USERPROFILE}\.Rider*",
+        "${env:USERPROFILE}\.RubyMine*"
     )
     
     foreach ($pattern in $JetBrainsPatterns) {
@@ -242,16 +242,16 @@ function Detect-Applications {
     }
     
     # Check for Discord (BetterDiscord/Vencord)
-    if (Test-Path "$env:APPDATA\BetterDiscord" -or 
-        Test-Path "$env:APPDATA\BetterDiscord\plugins" -or 
-        Test-Path "$env:APPDATA\Vencord") {
+    if (Test-Path "${env:APPDATA}\BetterDiscord" -or 
+        Test-Path "${env:APPDATA}\BetterDiscord\plugins" -or 
+        Test-Path "${env:APPDATA}\Vencord") {
         if ($availableThemes -contains "Discord") {
             $detectedApps["Discord"] = "Discord"
         }
     }
     
     # Check for GitHub Desktop
-    if (Test-Path "$env:LOCALAPPDATA\GitHubDesktop") {
+    if (Test-Path "${env:LOCALAPPDATA}\GitHubDesktop") {
         if ($availableThemes -contains "GitHubDesktop") {
             $detectedApps["GitHubDesktop"] = "GitHub Desktop"
         }

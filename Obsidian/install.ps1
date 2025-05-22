@@ -12,7 +12,7 @@ function Install-ObsidianTheme {
     
     # Ask for Obsidian vault location if not provided
     if ([string]::IsNullOrWhiteSpace($VaultPath)) {
-        $defaultVault = "$env:USERPROFILE\Documents\Obsidian"
+        $defaultVault = "${env:USERPROFILE}\Documents\Obsidian"
         $VaultPath = Read-Host "Enter your Obsidian vault path (or press Enter for default: $defaultVault)"
         
         if ([string]::IsNullOrWhiteSpace($VaultPath)) {
@@ -27,7 +27,7 @@ function Install-ObsidianTheme {
     }
     
     # Create theme directory
-    $obsidianThemePath = "$VaultPath\.obsidian\themes\NordShade"
+    $obsidianThemePath = "${VaultPath}\.obsidian\themes\NordShade"
     if (-not (Test-Path $obsidianThemePath)) {
         New-Item -Path $obsidianThemePath -ItemType Directory -Force | Out-Null
     }

@@ -9,8 +9,8 @@ function Install-DiscordTheme {
     Write-Host "Installing NordShade for Discord..." -ForegroundColor Yellow
     
     # Check if BetterDiscord is installed
-    $betterDiscordPath = "$env:APPDATA\BetterDiscord\themes"
-    $vencordPath = "$env:APPDATA\Vencord\themes"
+    $betterDiscordPath = "${env:APPDATA}\BetterDiscord\themes"
+    $vencordPath = "${env:APPDATA}\Vencord\themes"
     
     $installed = $false
     
@@ -34,7 +34,7 @@ function Install-DiscordTheme {
     
     # If neither is installed, just copy theme to Documents folder
     if (-not $installed) {
-        $targetPath = "$env:USERPROFILE\Documents\NordShade-Discord.theme.css"
+        $targetPath = "${env:USERPROFILE}\Documents\NordShade-Discord.theme.css"
         Copy-Item "$ThemeRoot\nord_shade.theme.css" -Destination $targetPath
         Write-Host "BetterDiscord or Vencord not detected. Theme file copied to: $targetPath" -ForegroundColor Yellow
         Write-Host "To use this theme, you need to install BetterDiscord or Vencord and manually move the theme file to the appropriate themes folder." -ForegroundColor Yellow

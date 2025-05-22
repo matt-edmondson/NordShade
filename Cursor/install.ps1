@@ -10,9 +10,9 @@ function Install-CursorTheme {
     Write-Host "Installing NordShade for Cursor IDE..." -ForegroundColor Yellow
     
     # Check if Cursor is installed
-    $cursorPath = "$env:LOCALAPPDATA\Programs\Cursor\resources\app\extensions"
+    $cursorPath = "${env:LOCALAPPDATA}\Programs\Cursor\resources\app\extensions"
     if (-not (Test-Path $cursorPath)) {
-        $cursorPath = "$env:APPDATA\cursor-editor\extensions"
+        $cursorPath = "${env:APPDATA}\cursor-editor\extensions"
     }
     
     if (-not (Test-Path $cursorPath)) {
@@ -41,7 +41,7 @@ function Install-CursorTheme {
     
     # Automatically apply the theme by updating settings.json
     if ($AutoApply) {
-        $settingsPath = "$env:APPDATA\Cursor\User\settings.json"
+        $settingsPath = "${env:APPDATA}\Cursor\User\settings.json"
         
         # Create settings.json if it doesn't exist
         if (-not (Test-Path $settingsPath)) {

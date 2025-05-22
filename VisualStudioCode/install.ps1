@@ -9,7 +9,7 @@ function Install-VSCodeTheme {
     
     Write-Host "Installing NordShade for Visual Studio Code..." -ForegroundColor Yellow
     
-    $vsCodeExtPath = "$env:USERPROFILE\.vscode\extensions\nordshade-theme"
+    $vsCodeExtPath = "${env:USERPROFILE}\.vscode\extensions\nordshade-theme"
     
     # Create directory if it doesn't exist
     if (-not (Test-Path $vsCodeExtPath)) {
@@ -31,7 +31,7 @@ function Install-VSCodeTheme {
     
     # Automatically apply the theme by updating settings.json
     if ($AutoApply) {
-        $settingsPath = "$env:APPDATA\Code\User\settings.json"
+        $settingsPath = "${env:APPDATA}\Code\User\settings.json"
         
         # Create settings.json if it doesn't exist
         if (-not (Test-Path $settingsPath)) {
