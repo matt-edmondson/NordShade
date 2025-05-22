@@ -107,11 +107,6 @@ NordShade is available for:
 - [JetBrains IDEs](./JetBrains/)
 - [Discord](./Discord/)
 - [GitHub Desktop](./GitHubDesktop/)
-- [Google Chrome](./GoogleChrome/)
-- [Firefox](./Firefox/)
-- [Safari](./Safari/)
-- [Opera](./Opera/)
-- [Brave Browser](./Brave/)
 - [Cursor IDE](./Cursor/)
 
 Each application folder contains:

@@ -16,29 +16,6 @@
     "JetBrains": ["NordShade.xml", "install.ps1", "install.sh", "README.md"],
     "Discord": ["nord_shade.theme.css", "install.ps1", "install.sh"],
     "GitHubDesktop": ["nord-shade.less", "install.ps1", "install.sh"],
-    "GoogleChrome": [
-      "manifest.json",
-      "theme_resources.pak",
-      "nordshade_theme_preview.png",
-      "install.ps1",
-      "install.sh"
-    ],
-    "Firefox": ["manifest.json", "nordshade.xpi", "install.ps1", "install.sh"],
-    "Safari": ["nordshade.css", "nordshade-safari.safariextz", "install.sh"],
-    "Opera": [
-      "manifest.json",
-      "theme_resources.pak",
-      "nordshade_preview.png",
-      "install.ps1",
-      "install.sh"
-    ],
-    "Brave": [
-      "manifest.json",
-      "theme_resources.pak",
-      "nordshade_preview.png",
-      "install.ps1",
-      "install.sh"
-    ],
     "Cursor": [
       "NordShade.json",
       "package.json",
