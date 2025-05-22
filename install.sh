@@ -16,115 +16,158 @@ if [ -f "$SCRIPT_DIR/README.md" ]; then
 else
     NORDSHADE_ROOT="$TEMP_PATH"
     IS_REPO=false
-    echo -e "\033[36mRunning standalone installation - will download required files\033[0m"
+    echo -e "\033[36mRunning standalone installation - will download required files on demand\033[0m"
 fi
 
-download_repository() {
-    echo -e "\033[33mDownloading NordShade repository files...\033[0m"
+# Index.json caching
+INDEX_JSON=""
+
+get_index_json() {
+    # Return cached index if already fetched
+    if [ -n "$INDEX_JSON" ]; then
+        echo "$INDEX_JSON"
+        return 0
+    fi
+    
+    local index_url="$REPO_URL/raw/main/index.json"
+    local index_path="$TEMP_PATH/index.json"
     
     # Create temp directory if it doesn't exist
     mkdir -p "$TEMP_PATH"
     
-    # Check for git and use it if available
-    if command -v git &> /dev/null; then
-        echo -e "\033[33mUsing git to clone repository...\033[0m"
-        pushd /tmp > /dev/null
-        git clone --depth 1 $REPO_URL
-        popd > /dev/null
-        return
-    fi
-    
-    # Fall back to downloading individual theme files
-    echo -e "\033[33mGit not found. Downloading individual theme files...\033[0m"
-    
-    # First, download the index.json file
-    INDEX_URL="$REPO_URL/raw/main/index.json"
-    INDEX_PATH="$TEMP_PATH/index.json"
-    
     # Download the index file
-    if curl -s "$INDEX_URL" -o "$INDEX_PATH"; then
-        # Check if we have jq available for JSON parsing
-        if command -v jq &> /dev/null; then
-            echo -e "\033[33mUsing jq to parse index.json...\033[0m"
-            BASE_URL=$(jq -r '.baseUrl' "$INDEX_PATH")
-            
-            # Get all theme names
-            THEME_NAMES=$(jq -r '.themes | keys[]' "$INDEX_PATH")
-            
-            # Loop through each theme
-            for THEME_NAME in $THEME_NAMES; do
-                echo -e "\033[33mDownloading files for $THEME_NAME...\033[0m"
-                
-                # Create directory for theme
-                mkdir -p "$TEMP_PATH/$THEME_NAME"
-                
-                # Get all files for this theme
-                FILES=$(jq -r ".themes[\"$THEME_NAME\"][]" "$INDEX_PATH")
-                
-                # Download each file
-                for FILE in $FILES; do
-                    FILE_URL="$BASE_URL/$THEME_NAME/$FILE"
-                    FILE_PATH="$TEMP_PATH/$THEME_NAME/$FILE"
-                    echo -e "  - $FILE"
-                    curl -s "$FILE_URL" -o "$FILE_PATH"
-                    
-                    # Make shell scripts executable
-                    if [[ "$FILE" == *.sh ]]; then
-                        chmod +x "$FILE_PATH"
-                    fi
-                done
-            done
-        else
-            # Fallback to basic parsing if jq is not available
-            echo -e "\033[33mjq not found, using basic parsing for index.json...\033[0m"
-            
-            # Create basic theme directories
-            theme_dirs=("VisualStudioCode" "Obsidian" "Neovim" "JetBrains" "Discord" "GitHubDesktop")
-            for dir in "${theme_dirs[@]}"; do
-                mkdir -p "$TEMP_PATH/$dir"
-            done
-            
-            # Download essential files
-            curl -s "$REPO_URL/raw/main/VisualStudioCode/NordShade.json" -o "$TEMP_PATH/VisualStudioCode/NordShade.json"
-            curl -s "$REPO_URL/raw/main/Obsidian/theme.css" -o "$TEMP_PATH/Obsidian/theme.css"
-            curl -s "$REPO_URL/raw/main/Obsidian/manifest.json" -o "$TEMP_PATH/Obsidian/manifest.json"
-            curl -s "$REPO_URL/raw/main/Neovim/nord_shade.vim" -o "$TEMP_PATH/Neovim/nord_shade.vim"
-            curl -s "$REPO_URL/raw/main/Neovim/install.sh" -o "$TEMP_PATH/Neovim/install.sh"
-            chmod +x "$TEMP_PATH/Neovim/install.sh"
-            curl -s "$REPO_URL/raw/main/JetBrains/NordShade.xml" -o "$TEMP_PATH/JetBrains/NordShade.xml"
-            curl -s "$REPO_URL/raw/main/JetBrains/install.sh" -o "$TEMP_PATH/JetBrains/install.sh"
-            chmod +x "$TEMP_PATH/JetBrains/install.sh"
-            curl -s "$REPO_URL/raw/main/Discord/nord_shade.theme.css" -o "$TEMP_PATH/Discord/nord_shade.theme.css"
-            curl -s "$REPO_URL/raw/main/GitHubDesktop/nord-shade.less" -o "$TEMP_PATH/GitHubDesktop/nord-shade.less"
-        fi
+    if curl -s "$index_url" -o "$index_path"; then
+        # Cache the index.json content
+        INDEX_JSON=$(cat "$index_path")
+        echo "$INDEX_JSON"
+        return 0
     else
-        echo -e "\033[31mFailed to download index.json, falling back to essential files...\033[0m"
+        echo "Failed to download index.json" >&2
+        return 1
+    fi
+}
+
+download_theme_files() {
+    local THEME_NAME="$1"
+    
+    echo -e "\033[33mDownloading files for $THEME_NAME theme...\033[0m"
+    
+    # Create directory for theme
+    mkdir -p "$TEMP_PATH/$THEME_NAME"
+    
+    # Try to get index.json
+    local index_json=$(get_index_json)
+    local result=$?
+    
+    if [ $result -ne 0 ] || [ -z "$index_json" ]; then
+        echo -e "\033[33mUsing fallback download method for $THEME_NAME...\033[0m"
         
-        # Create basic theme directories in case index.json fails
-        theme_dirs=("VisualStudioCode" "Obsidian" "Neovim" "JetBrains" "Discord" "GitHubDesktop")
-        for dir in "${theme_dirs[@]}"; do
-            mkdir -p "$TEMP_PATH/$dir"
-        done
+        # Fallback to basic downloads based on theme name
+        case "$THEME_NAME" in
+            "VisualStudioCode")
+                curl -s "$REPO_URL/raw/main/VisualStudioCode/NordShade.json" -o "$TEMP_PATH/VisualStudioCode/NordShade.json"
+                curl -s "$REPO_URL/raw/main/VisualStudioCode/package.json" -o "$TEMP_PATH/VisualStudioCode/package.json"
+                curl -s "$REPO_URL/raw/main/VisualStudioCode/README.md" -o "$TEMP_PATH/VisualStudioCode/README.md"
+                ;;
+            "Obsidian")
+                curl -s "$REPO_URL/raw/main/Obsidian/theme.css" -o "$TEMP_PATH/Obsidian/theme.css"
+                curl -s "$REPO_URL/raw/main/Obsidian/manifest.json" -o "$TEMP_PATH/Obsidian/manifest.json"
+                ;;
+            "Neovim")
+                curl -s "$REPO_URL/raw/main/Neovim/nord_shade.vim" -o "$TEMP_PATH/Neovim/nord_shade.vim"
+                curl -s "$REPO_URL/raw/main/Neovim/install.sh" -o "$TEMP_PATH/Neovim/install.sh"
+                chmod +x "$TEMP_PATH/Neovim/install.sh"
+                ;;
+            "JetBrains")
+                curl -s "$REPO_URL/raw/main/JetBrains/NordShade.xml" -o "$TEMP_PATH/JetBrains/NordShade.xml"
+                curl -s "$REPO_URL/raw/main/JetBrains/install.sh" -o "$TEMP_PATH/JetBrains/install.sh"
+                curl -s "$REPO_URL/raw/main/JetBrains/README.md" -o "$TEMP_PATH/JetBrains/README.md" 2>/dev/null
+                chmod +x "$TEMP_PATH/JetBrains/install.sh"
+                ;;
+            "Discord")
+                curl -s "$REPO_URL/raw/main/Discord/nord_shade.theme.css" -o "$TEMP_PATH/Discord/nord_shade.theme.css"
+                ;;
+            "GitHubDesktop")
+                curl -s "$REPO_URL/raw/main/GitHubDesktop/nord-shade.less" -o "$TEMP_PATH/GitHubDesktop/nord-shade.less"
+                ;;
+            *)
+                echo -e "\033[31mNo fallback download method for $THEME_NAME\033[0m"
+                return 1
+                ;;
+        esac
         
-        # Download essential files
-        curl -s "$REPO_URL/raw/main/VisualStudioCode/NordShade.json" -o "$TEMP_PATH/VisualStudioCode/NordShade.json"
-        curl -s "$REPO_URL/raw/main/Obsidian/theme.css" -o "$TEMP_PATH/Obsidian/theme.css"
-        curl -s "$REPO_URL/raw/main/Obsidian/manifest.json" -o "$TEMP_PATH/Obsidian/manifest.json"
-        curl -s "$REPO_URL/raw/main/Neovim/nord_shade.vim" -o "$TEMP_PATH/Neovim/nord_shade.vim"
-        curl -s "$REPO_URL/raw/main/Neovim/install.sh" -o "$TEMP_PATH/Neovim/install.sh"
-        chmod +x "$TEMP_PATH/Neovim/install.sh"
-        curl -s "$REPO_URL/raw/main/JetBrains/NordShade.xml" -o "$TEMP_PATH/JetBrains/NordShade.xml"
-        curl -s "$REPO_URL/raw/main/JetBrains/install.sh" -o "$TEMP_PATH/JetBrains/install.sh"
-        chmod +x "$TEMP_PATH/JetBrains/install.sh"
-        curl -s "$REPO_URL/raw/main/Discord/nord_shade.theme.css" -o "$TEMP_PATH/Discord/nord_shade.theme.css"
-        curl -s "$REPO_URL/raw/main/GitHubDesktop/nord-shade.less" -o "$TEMP_PATH/GitHubDesktop/nord-shade.less"
+        return 0
     fi
     
-    echo -e "\033[32mTheme files downloaded successfully\033[0m"
+    # Use jq if available for proper JSON parsing
+    if command -v jq &> /dev/null; then
+        local BASE_URL=$(echo "$index_json" | jq -r '.baseUrl')
+        local THEME_FILES=$(echo "$index_json" | jq -r ".themes[\"$THEME_NAME\"][]" 2>/dev/null)
+        
+        if [ -z "$THEME_FILES" ]; then
+            echo -e "\033[31mTheme $THEME_NAME not found in index.json\033[0m"
+            return 1
+        fi
+        
+        # Download each file
+        for FILE in $THEME_FILES; do
+            local FILE_URL="$BASE_URL/$THEME_NAME/$FILE"
+            local FILE_PATH="$TEMP_PATH/$THEME_NAME/$FILE"
+            echo -e "  - $FILE"
+            curl -s "$FILE_URL" -o "$FILE_PATH"
+            
+            # Make shell scripts executable
+            if [[ "$FILE" == *.sh ]]; then
+                chmod +x "$FILE_PATH"
+            fi
+        done
+    else
+        # Basic download for essential files if jq is not available
+        echo -e "\033[33mjq not available, using fallback download for $THEME_NAME...\033[0m"
+        case "$THEME_NAME" in
+            "VisualStudioCode")
+                curl -s "$REPO_URL/raw/main/VisualStudioCode/NordShade.json" -o "$TEMP_PATH/VisualStudioCode/NordShade.json"
+                curl -s "$REPO_URL/raw/main/VisualStudioCode/package.json" -o "$TEMP_PATH/VisualStudioCode/package.json"
+                curl -s "$REPO_URL/raw/main/VisualStudioCode/README.md" -o "$TEMP_PATH/VisualStudioCode/README.md"
+                ;;
+            "Obsidian")
+                curl -s "$REPO_URL/raw/main/Obsidian/theme.css" -o "$TEMP_PATH/Obsidian/theme.css"
+                curl -s "$REPO_URL/raw/main/Obsidian/manifest.json" -o "$TEMP_PATH/Obsidian/manifest.json"
+                ;;
+            "Neovim")
+                curl -s "$REPO_URL/raw/main/Neovim/nord_shade.vim" -o "$TEMP_PATH/Neovim/nord_shade.vim"
+                curl -s "$REPO_URL/raw/main/Neovim/install.sh" -o "$TEMP_PATH/Neovim/install.sh"
+                chmod +x "$TEMP_PATH/Neovim/install.sh"
+                ;;
+            "JetBrains")
+                curl -s "$REPO_URL/raw/main/JetBrains/NordShade.xml" -o "$TEMP_PATH/JetBrains/NordShade.xml"
+                curl -s "$REPO_URL/raw/main/JetBrains/install.sh" -o "$TEMP_PATH/JetBrains/install.sh"
+                curl -s "$REPO_URL/raw/main/JetBrains/README.md" -o "$TEMP_PATH/JetBrains/README.md" 2>/dev/null
+                chmod +x "$TEMP_PATH/JetBrains/install.sh"
+                ;;
+            "Discord")
+                curl -s "$REPO_URL/raw/main/Discord/nord_shade.theme.css" -o "$TEMP_PATH/Discord/nord_shade.theme.css"
+                ;;
+            "GitHubDesktop")
+                curl -s "$REPO_URL/raw/main/GitHubDesktop/nord-shade.less" -o "$TEMP_PATH/GitHubDesktop/nord-shade.less"
+                ;;
+            *)
+                echo -e "\033[31mNo fallback download method for $THEME_NAME\033[0m"
+                return 1
+                ;;
+        esac
+    fi
+    
+    return 0
 }
 
 install_vscode_theme() {
     echo -e "\033[33mInstalling NordShade for Visual Studio Code...\033[0m"
+    
+    # Download theme files if running standalone
+    if [ "$IS_REPO" = false ]; then
+        download_theme_files "VisualStudioCode"
+    fi
     
     # Determine OS and set paths
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -187,6 +230,11 @@ install_vscode_theme() {
 
 install_obsidian_theme() {
     echo -e "\033[33mInstalling NordShade for Obsidian...\033[0m"
+    
+    # Download theme files if running standalone
+    if [ "$IS_REPO" = false ]; then
+        download_theme_files "Obsidian"
+    fi
     
     # Ask for Obsidian vault location
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -253,12 +301,23 @@ install_obsidian_theme() {
 
 install_neovim_theme() {
     echo -e "\033[33mInstalling NordShade for Neovim...\033[0m"
+    
+    # Download theme files if running standalone
+    if [ "$IS_REPO" = false ]; then
+        download_theme_files "Neovim"
+    fi
+    
     # Call the Neovim-specific installer
     "$NORDSHADE_ROOT/Neovim/install.sh"
 }
 
 install_jetbrains_theme() {
     echo -e "\033[33mInstalling NordShade for JetBrains IDEs...\033[0m"
+    
+    # Download theme files if running standalone
+    if [ "$IS_REPO" = false ]; then
+        download_theme_files "JetBrains"
+    fi
     
     # Call the JetBrains-specific installer
     bash "$NORDSHADE_ROOT/JetBrains/install.sh"
@@ -294,6 +353,11 @@ detect_jetbrains() {
 install_discord_theme() {
     echo -e "\033[33mInstalling NordShade for Discord...\033[0m"
     
+    # Download theme files if running standalone
+    if [ "$IS_REPO" = false ]; then
+        download_theme_files "Discord"
+    fi
+    
     # Check for BetterDiscord locations
     BETTER_DISCORD_PATHS=(
         "$HOME/.config/BetterDiscord/themes"  # Linux
@@ -323,6 +387,11 @@ install_discord_theme() {
 install_github_desktop_theme() {
     echo -e "\033[33mInstalling NordShade for GitHub Desktop...\033[0m"
     
+    # Download theme files if running standalone
+    if [ "$IS_REPO" = false ]; then
+        download_theme_files "GitHubDesktop"
+    fi
+    
     # Copy file to home directory for user to manually install
     TARGET_PATH="$HOME/NordShade-GitHubDesktop.less"
     cp "$NORDSHADE_ROOT/GitHubDesktop/nord-shade.less" "$TARGET_PATH"
@@ -331,9 +400,51 @@ install_github_desktop_theme() {
     echo -e "\033[33mPlease refer to GitHubDesktop README.md for manual installation instructions\033[0m"
 }
 
-# Check if we need to download files
+install_all_themes() {
+    echo -e "\033[33mInstalling NordShade for all detected applications...\033[0m"
+    
+    # Check and install for each supported application
+    if command -v code &> /dev/null; then
+        install_vscode_theme
+    fi
+    
+    if [ -d "/Applications/Visual Studio.app" ] || [ -d "/Applications/Visual Studio Code.app" ] || command -v devenv &> /dev/null; then
+        install_vs2022_theme
+    fi
+    
+    if [ -d "$HOME/.config/Microsoft/Windows Terminal" ] || [ -d "$HOME/Library/Application Support/Microsoft/Windows Terminal" ]; then
+        install_windows_terminal_theme
+    fi
+    
+    if [ -f "$HOME/.bashrc" ] || [ -f "$HOME/.zshrc" ]; then
+        install_unix_shell_theme
+    fi
+    
+    if command -v obsidian &> /dev/null || [ -d "$HOME/.config/obsidian" ] || [ -d "$HOME/Library/Application Support/obsidian" ]; then
+        install_obsidian_theme
+    fi
+    
+    if command -v nvim &> /dev/null || command -v vim &> /dev/null; then
+        install_neovim_theme
+    fi
+    
+    # Check for JetBrains IDEs
+    if detect_jetbrains; then
+        install_jetbrains_theme
+    fi
+    
+    if [ -d "$HOME/.config/BetterDiscord" ] || [ -d "$HOME/Library/Application Support/BetterDiscord" ] || [ -d "$HOME/.config/VencordDesktop" ]; then
+        install_discord_theme
+    fi
+    
+    if [ -d "/Applications/GitHub Desktop.app" ] || command -v github &> /dev/null; then
+        install_github_desktop_theme
+    fi
+}
+
+# Create temp directory if running standalone
 if [ "$IS_REPO" = false ]; then
-    download_repository
+    mkdir -p "$TEMP_PATH"
 fi
 
 # Present the menu to the user
@@ -408,46 +519,13 @@ case $MENU_CHOICE in
         ;;
 esac
 
-echo -e "\033[32mNordShade installation complete!\033[0m"
+# Clean up temp files if we downloaded them
+if [ "$IS_REPO" = false ] && [ -d "$TEMP_PATH" ]; then
+    read -p "Remove temporary downloaded files? (y/n): " CLEANUP
+    if [ "$CLEANUP" == "y" ]; then
+        rm -rf "$TEMP_PATH"
+        echo -e "\033[32mTemporary files removed\033[0m"
+    fi
+fi
 
-install_all_themes() {
-    echo -e "\033[33mInstalling NordShade for all detected applications...\033[0m"
-    
-    # Check and install for each supported application
-    if command -v code &> /dev/null; then
-        install_vscode_theme
-    fi
-    
-    if [ -d "/Applications/Visual Studio.app" ] || [ -d "/Applications/Visual Studio Code.app" ] || command -v devenv &> /dev/null; then
-        install_vs2022_theme
-    fi
-    
-    if [ -d "$HOME/.config/Microsoft/Windows Terminal" ] || [ -d "$HOME/Library/Application Support/Microsoft/Windows Terminal" ]; then
-        install_windows_terminal_theme
-    fi
-    
-    if [ -f "$HOME/.bashrc" ] || [ -f "$HOME/.zshrc" ]; then
-        install_unix_shell_theme
-    fi
-    
-    if command -v obsidian &> /dev/null || [ -d "$HOME/.config/obsidian" ] || [ -d "$HOME/Library/Application Support/obsidian" ]; then
-        install_obsidian_theme
-    fi
-    
-    if command -v nvim &> /dev/null || command -v vim &> /dev/null; then
-        install_neovim_theme
-    fi
-    
-    # Check for JetBrains IDEs
-    if detect_jetbrains; then
-        install_jetbrains_theme
-    fi
-    
-    if [ -d "$HOME/.config/BetterDiscord" ] || [ -d "$HOME/Library/Application Support/BetterDiscord" ] || [ -d "$HOME/.config/VencordDesktop" ]; then
-        install_discord_theme
-    fi
-    
-    if [ -d "/Applications/GitHub Desktop.app" ] || command -v github &> /dev/null; then
-        install_github_desktop_theme
-    fi
-} 
+echo -e "\033[32mNordShade installation complete!\033[0m" 
