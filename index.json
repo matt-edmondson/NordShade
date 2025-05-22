@@ -38,6 +38,13 @@
       "nordshade_preview.png",
       "install.ps1",
       "install.sh"
+    ],
+    "Cursor": [
+      "NordShade.json",
+      "package.json",
+      "README.md",
+      "install.ps1",
+      "install.sh"
     ]
   },
   "baseUrl": "https://raw.githubusercontent.com/matt-edmondson/NordShade/main"

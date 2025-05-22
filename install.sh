@@ -196,6 +196,19 @@ detect_applications() {
         DETECTED_APPS="$DETECTED_APPS VisualStudioCode"
     fi
     
+    # Check for Cursor IDE
+    CURSOR_PATHS=(
+        "$HOME/.cursor"
+        "$HOME/.config/cursor-editor"
+        "$HOME/Library/Application Support/cursor-editor"
+    )
+    for path in "${CURSOR_PATHS[@]}"; do
+        if [ -d "$path" ] && echo "$AVAILABLE_THEMES" | grep -q "Cursor"; then
+            DETECTED_APPS="$DETECTED_APPS Cursor"
+            break
+        fi
+    done
+    
     # Check for Neovim
     if (command -v nvim &> /dev/null || command -v vim &> /dev/null) && echo "$AVAILABLE_THEMES" | grep -q "Neovim"; then
         DETECTED_APPS="$DETECTED_APPS Neovim"

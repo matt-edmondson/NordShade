@@ -166,6 +166,14 @@ function Detect-Applications {
         }
     }
     
+    # Check for Cursor IDE
+    if ((Test-Path "$env:LOCALAPPDATA\Programs\Cursor\cursor.exe") -or 
+        (Test-Path "$env:APPDATA\cursor-editor")) {
+        if ($availableThemes -contains "Cursor") {
+            $detectedApps["Cursor"] = "Cursor IDE"
+        }
+    }
+    
     # Check for VS 2022
     if (Get-Command devenv -ErrorAction SilentlyContinue) {
         if ($availableThemes -contains "VisualStudio2022") {

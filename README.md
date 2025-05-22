@@ -112,6 +112,7 @@ NordShade is available for:
 - [Safari](./Safari/)
 - [Opera](./Opera/)
 - [Brave Browser](./Brave/)
+- [Cursor IDE](./Cursor/)
 
 Each application folder contains:
 
