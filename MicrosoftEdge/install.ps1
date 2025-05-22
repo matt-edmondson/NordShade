@@ -9,8 +9,8 @@ function Install-EdgeTheme {
     Write-Host "Installing NordShade for Microsoft Edge..." -ForegroundColor Yellow
     
     # Check if Edge is installed
-    $edgePath = "${env:PROGRAMFILES}\Microsoft\Edge\Application\msedge.exe"
-    $edgePath86 = "${env:PROGRAMFILES(x86)}\Microsoft\Edge\Application\msedge.exe"
+    $edgePath = "${env:ProgramFiles}\Microsoft\Edge\Application\msedge.exe"
+    $edgePath86 = "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe"
     
     if (-not (Test-Path $edgePath) -and -not (Test-Path $edgePath86)) {
         Write-Host "Microsoft Edge not detected." -ForegroundColor Red
