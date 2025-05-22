@@ -298,7 +298,7 @@ function Detect-Applications {
     }
     
     # Check for Microsoft Edge
-    if ((Test-Path "${env:ProgramFiles}\Microsoft\Edge\Application\msedge.exe") -or 
+    if ((Test-Path "${env:ProgramFiles}\Microsoft\Edge\Application\msedge.exe") -or
         (Test-Path "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe")) {
         if ($availableThemes -contains "MicrosoftEdge") {
             $detectedApps["MicrosoftEdge"] = "Microsoft Edge"
@@ -344,9 +344,9 @@ function Detect-Applications {
     }
     
     # Check for Discord (BetterDiscord/Vencord)
-    if (Test-Path "${env:APPDATA}\BetterDiscord" -or 
-        Test-Path "${env:APPDATA}\BetterDiscord\plugins" -or 
-        Test-Path "${env:APPDATA}\Vencord") {
+    if ((Test-Path "${env:APPDATA}\BetterDiscord") -or 
+        (Test-Path "${env:APPDATA}\BetterDiscord\plugins") -or 
+        (Test-Path "${env:APPDATA}\Vencord")) {
         if ($availableThemes -contains "Discord") {
             $detectedApps["Discord"] = "Discord"
         }
