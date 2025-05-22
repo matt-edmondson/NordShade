@@ -298,7 +298,7 @@ function Detect-Applications {
     }
     
     # Check for Microsoft Edge
-    if (Test-Path "${env:ProgramFiles}\Microsoft\Edge\Application\msedge.exe" -or 
+    if ((Test-Path "${env:ProgramFiles}\Microsoft\Edge\Application\msedge.exe") -or 
         (Test-Path "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe")) {
         if ($availableThemes -contains "MicrosoftEdge") {
             $detectedApps["MicrosoftEdge"] = "Microsoft Edge"
