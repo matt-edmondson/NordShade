@@ -1,0 +1,35 @@
+{
+  "manifest_version": 2,
+  "name": "NordShade",
+  "version": "1.0",
+  "description": "A darker variant of the Nord color scheme",
+  "author": "NordShade",
+  "theme": {
+    "colors": {
+      "toolbar": "#1e222a",
+      "toolbar_text": "#d8dee9",
+      "frame": "#1e222a",
+      "tab_background_text": "#cacfd6",
+      "toolbar_field": "#2a2f3b",
+      "toolbar_field_text": "#d8dee9",
+      "toolbar_field_border": "#1e222a",
+      "popup": "#1e222a",
+      "popup_text": "#d8dee9",
+      "popup_border": "#394253",
+      "tab_line": "#81a1c1",
+      "icons": "#81a1c1",
+      "icons_attention": "#88c0d0",
+      "button_background_hover": "#394253",
+      "button_background_active": "#394253",
+      "ntp_background": "#1e222a",
+      "ntp_text": "#d8dee9",
+      "sidebar": "#1e222a",
+      "sidebar_text": "#d8dee9",
+      "sidebar_highlight": "#394253",
+      "sidebar_highlight_text": "#eceff4",
+      "bookmark_text": "#d8dee9",
+      "tab_selected": "#394253",
+      "tab_text": "#d8dee9"
+    }
+  }
+}

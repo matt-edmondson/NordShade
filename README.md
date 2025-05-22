@@ -42,21 +42,18 @@ The scripts will:
 
 1. Detect your installed applications
 2. Download necessary theme files (or use git clone if available)
-3. Install themes for applications you choose
-4. **Automatically apply the themes where possible**
+3. Ask if you want to automatically apply themes or just install them
+4. Install themes for applications you choose
 5. Clean up temporary files after installation
 
-#### Automatic Theme Application
+#### Theme Application Options
 
-The installation scripts will automatically apply themes for:
+You can now choose whether to automatically apply themes during installation:
 
-- **Visual Studio Code**: Updates settings.json with the NordShade theme
-- **Windows Terminal**: Sets NordShade as the default color scheme for all profiles
-- **Visual Studio 2022**: Attempts to apply theme using the VS command line interface
-- **Windows 11**: Applies the theme using the Windows theme API and installs the included wallpaper
-- **Obsidian**: Updates appearance.json to set NordShade as active theme
+- **Auto-Apply (Yes)**: The installer will apply themes immediately where possible
+- **Install Only (No)**: Themes will be installed but will require manual activation in each application
 
-Some applications require manual steps after installation (like loading unpacked extensions or placing files in specific locations).
+This option is presented at the beginning of the installation process and applies to all applications. If you choose "No", the installer will provide instructions for manually activating each theme.
 
 ### Option 2: Clone Repository and Install
 
@@ -77,25 +74,49 @@ cd NordShade
 ./install.sh
 ```
 
-## Themes
+## Theme Management
+
+NordShade uses a modular architecture with:
+
+1. **Application-specific installers**: Each supported app has its own installation script
+2. **Central index**: An `index.json` file defines all available themes and required files
+3. **Main installers**: Unified scripts that orchestrate the installation process
+
+### index.json
+
+The `index.json` file is the central registry for all NordShade themes. It:
+
+- Lists all supported applications
+- Defines required files for each theme
+- Specifies download locations
+- Makes adding new themes simple without modifying the main installers
+
+This architecture ensures themes are downloaded only when needed and installed consistently.
+
+## Supported Applications
 
 NordShade is available for:
 
-- [Visual Studio 2022](./VisualStudio2022/)
 - [Visual Studio Code](./VisualStudioCode/)
+- [Visual Studio 2022](./VisualStudio2022/)
 - [Windows Terminal](./WindowsTerminal/)
 - [Windows 11](./Windows11/)
 - [Microsoft Edge](./MicrosoftEdge/)
 - [Obsidian](./Obsidian/)
 - [Neovim](./Neovim/)
-- [Windows PowerShell](./WindowsPowerShell/)
-- [JetBrains DataGrip](./JetBrainsDataGrip/)
+- [JetBrains IDEs](./JetBrains/)
 - [Discord](./Discord/)
 - [GitHub Desktop](./GitHubDesktop/)
-- [Fork](./Fork/)
-- [Cursor](./Cursor/)
-- [Blender](./Blender/)
-- [Slack](./Slack/)
-- [Docker Desktop](./DockerDesktop/)
-- [Arduino IDE](./ArduinoIDE/)
-- [Unity Hub](./UnityHub/)
+- [Google Chrome](./GoogleChrome/)
+- [Firefox](./Firefox/)
+- [Safari](./Safari/)
+- [Opera](./Opera/)
+- [Brave Browser](./Brave/)
+
+Each application folder contains:
+
+- Theme files
+- Installation scripts
+- Documentation
+
+The modular architecture makes it easy to install themes for specific applications or all detected applications at once.

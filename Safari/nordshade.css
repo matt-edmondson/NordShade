@@ -1,0 +1,101 @@
+/* NordShade theme for Safari */
+
+:root {
+  --nord-shade-bg-0: #1e222a;
+  --nord-shade-bg-1: #2a2f3b;
+  --nord-shade-bg-2: #394253;
+  --nord-shade-fg-0: #d8dee9;
+  --nord-shade-fg-1: #cacfd6;
+  --nord-shade-comment: #57637d;
+  --nord-shade-red: #bf616a;
+  --nord-shade-orange: #d08770;
+  --nord-shade-yellow: #ebcb8b;
+  --nord-shade-green: #a3be8c;
+  --nord-shade-cyan: #88c0d0;
+  --nord-shade-blue: #81a1c1;
+  --nord-shade-purple: #b48ead;
+}
+
+/* Safari UI Elements */
+body {
+  background-color: var(--nord-shade-bg-0) !important;
+  color: var(--nord-shade-fg-0) !important;
+}
+
+/* Toolbar and tab bar */
+.toolbar,
+.tab-bar {
+  background-color: var(--nord-shade-bg-0) !important;
+  color: var(--nord-shade-fg-0) !important;
+}
+
+/* Sidebar */
+.sidebar {
+  background-color: var(--nord-shade-bg-0) !important;
+  color: var(--nord-shade-fg-0) !important;
+}
+
+/* Search box */
+input[type="text"],
+input[type="search"] {
+  background-color: var(--nord-shade-bg-1) !important;
+  color: var(--nord-shade-fg-0) !important;
+  border: 1px solid var(--nord-shade-bg-2) !important;
+}
+
+/* Buttons */
+button,
+.button {
+  background-color: var(--nord-shade-bg-1) !important;
+  color: var(--nord-shade-fg-0) !important;
+  border: 1px solid var(--nord-shade-bg-2) !important;
+}
+
+button:hover,
+.button:hover {
+  background-color: var(--nord-shade-bg-2) !important;
+}
+
+/* Links */
+a {
+  color: var(--nord-shade-blue) !important;
+}
+
+a:visited {
+  color: var(--nord-shade-purple) !important;
+}
+
+a:hover {
+  color: var(--nord-shade-cyan) !important;
+}
+
+/* Selections */
+::selection {
+  background-color: var(--nord-shade-bg-2) !important;
+  color: var(--nord-shade-fg-0) !important;
+}
+
+/* Safari Reader mode */
+.reader-view {
+  background-color: var(--nord-shade-bg-0) !important;
+  color: var(--nord-shade-fg-0) !important;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--nord-shade-bg-0);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--nord-shade-bg-2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--nord-shade-comment);
+}
