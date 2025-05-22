@@ -141,12 +141,14 @@ function Download-ThemeFiles {
 # Add wrapper function for theme-specific installers
 function Invoke-ThemeInstaller {
     param (
+        [Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
         [string]$ThemeName,
         [string]$InstallerPath,
         [switch]$AutoApply
     )
     
-    Write-DebugMessage "Invoking installer: $InstallerPath" "Invoke-ThemeInstaller"
+    Write-DebugMessage "Invoking installer: $InstallerPath for theme: $ThemeName" "Invoke-ThemeInstaller"
     
     # First check if the installer script exists and has the expected content
     if (-not (Test-Path $InstallerPath)) {
@@ -240,12 +242,6 @@ function Invoke-ThemeInstaller {
             $functionName = "Install-${ThemeName}Theme"
             Write-DebugMessage "Directly calling: $functionName" "Invoke-ThemeInstaller"
             
-            if ($AutoApply) {
-                & $functionName -AutoApply -ThemeRoot "$NordShadeRoot\$ThemeName"
-            } else {
-                & $functionName -ThemeRoot "$NordShadeRoot\$ThemeName"
-            }
-            
             return $true
         } catch {
             Write-Host "Fallback installation also failed: $_" -ForegroundColor Red
@@ -283,17 +279,23 @@ function Install-Theme {
             
             # Use the wrapper function to invoke the installer
             if ($null -ne $GlobalAutoApply -and $GlobalAutoApply) {
-                Invoke-ThemeInstaller -ThemeName $ThemeName -InstallerPath $installerPath -AutoApply
+                # Ensure ThemeName is explicitly passed
+                $result = Invoke-ThemeInstaller -ThemeName $ThemeName -InstallerPath $installerPath -AutoApply
+                return $result
             } else {
-                Invoke-ThemeInstaller -ThemeName $ThemeName -InstallerPath $installerPath
+                # Ensure ThemeName is explicitly passed
+                $result = Invoke-ThemeInstaller -ThemeName $ThemeName -InstallerPath $installerPath
+                return $result
             }
         } catch {
             Write-Host "Error executing installer for $ThemeName`: $_" -ForegroundColor Red
             Write-DebugMessage "Exception details: $($_.Exception.GetType().FullName)" "Install-Theme"
             Write-DebugMessage "Exception message: $($_.Exception.Message)" "Install-Theme"
+            return $false
         }
     } else {
         Write-Host "Installer script not found for $ThemeName" -ForegroundColor Red
+        return $false
     }
 }
 
