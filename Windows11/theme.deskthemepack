@@ -1,0 +1,79 @@
+[Theme]
+DisplayName=NordShade
+ThemeType=DarkMode
+
+[Control Panel\Desktop]
+Wallpaper=%SystemRoot%\Resources\Themes\NordShade\NordShade.jpg
+TileWallpaper=0
+WallpaperStyle=10
+Pattern=
+
+[VisualStyles]
+Path=%SystemRoot%\Resources\Themes\Aero\Aero.msstyles
+ColorStyle=NormalColor
+Size=NormalSize
+AutoColorization=0
+ColorizationColor=0XFF57637D
+SystemMode=Dark
+AppMode=Dark
+VisualStyleVersion=10
+
+[MasterThemeSelector]
+MTSM=RJSPBS
+
+[Sounds]
+SchemeName=.None
+
+[Control Panel\Cursors]
+AppStarting=%SystemRoot%\cursors\aero_working.ani
+Arrow=%SystemRoot%\cursors\aero_arrow.cur
+Crosshair=%SystemRoot%\cursors\aero_unavail.cur
+Hand=%SystemRoot%\cursors\aero_link.cur
+Help=%SystemRoot%\cursors\aero_helpsel.cur
+IBeam=%SystemRoot%\cursors\aero_ibeam.cur
+No=%SystemRoot%\cursors\aero_unavail.cur
+NWPen=%SystemRoot%\cursors\aero_pen.cur
+SizeAll=%SystemRoot%\cursors\aero_move.cur
+SizeNESW=%SystemRoot%\cursors\aero_nesw.cur
+SizeNS=%SystemRoot%\cursors\aero_ns.cur
+SizeNWSE=%SystemRoot%\cursors\aero_nwse.cur
+SizeWE=%SystemRoot%\cursors\aero_ew.cur
+UpArrow=%SystemRoot%\cursors\aero_up.cur
+Wait=%SystemRoot%\cursors\aero_busy.ani
+DefaultValue=Windows Aero
+
+[Control Panel\Colors]
+Background=30 34 42
+Foreground=216 222 233
+Hilight=57 66 83
+HilightText=216 222 233
+ActiveTitle=30 34 42
+InactiveTitle=42 47 59
+TitleText=216 222 233
+InactiveTitleText=87 99 125
+ActiveBorder=30 34 42
+InactiveBorder=42 47 59
+WindowFrame=42 47 59
+WindowText=216 222 233
+ButtonFace=30 34 42
+ButtonText=216 222 233
+ButtonHilight=57 66 83
+ButtonLight=42 47 59
+ButtonShadow=42 47 59
+ButtonAlternateFace=42 47 59
+HotTrackingColor=136 192 208
+GrayText=87 99 125
+MenuText=216 222 233
+MenuHilight=57 66 83
+Menu=30 34 42
+MenuBar=30 34 42
+Scrollbar=42 47 59
+InfoText=216 222 233
+InfoWindow=30 34 42
+GradientActiveTitle=30 34 42
+GradientInactiveTitle=42 47 59
+ButtonAlternateShade=42 47 59
+
+[Theme.Info]
+DisplayName=NordShade
+Version=1.0 

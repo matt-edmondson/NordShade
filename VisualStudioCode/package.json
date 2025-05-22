@@ -1,0 +1,33 @@
+{
+  "name": "nordshade",
+  "displayName": "NordShade",
+  "description": "A darker variant of the Nord color scheme",
+  "version": "1.0.0",
+  "publisher": "matt-edmondson",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Themes"
+  ],
+  "contributes": {
+    "themes": [
+      {
+        "label": "NordShade",
+        "uiTheme": "vs-dark",
+        "path": "./NordShade.json"
+      }
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/matt-edmondson/nordshade"
+  },
+  "keywords": [
+    "theme",
+    "dark theme",
+    "nord",
+    "nordshade"
+  ],
+  "license": "MIT"
+}

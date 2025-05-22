@@ -1,0 +1,8 @@
+{
+  "name": "NordShade",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "author": "matt-edmondson",
+  "authorUrl": "https://github.com/matt-edmondson/nordshade",
+  "description": "A darker variant of the Nord color scheme for Obsidian."
+}

@@ -1,0 +1,40 @@
+{
+  "name": "NordShade",
+  "version": "1.0",
+  "description": "A darker variant of the Nord color scheme",
+  "manifest_version": 3,
+  "theme": {
+    "colors": {
+      "frame": [30, 34, 42],
+      "frame_inactive": [30, 34, 42],
+      "toolbar": [30, 34, 42],
+      "toolbar_text": [216, 222, 233],
+      "toolbar_field": [42, 47, 59],
+      "toolbar_field_text": [216, 222, 233],
+      "toolbar_field_border": [57, 66, 83],
+      "toolbar_field_focus": [42, 47, 59],
+      "toolbar_field_text_focus": [216, 222, 233],
+      "toolbar_field_border_focus": [136, 192, 208],
+      "tab_background_text": [87, 99, 125],
+      "tab_background_text_inactive": [87, 99, 125],
+      "tab_text": [216, 222, 233],
+      "tab_line": [136, 192, 208],
+      "tab_loading": [136, 192, 208],
+      "button_background_hover": [57, 66, 83],
+      "button_background_active": [57, 66, 83],
+      "popup": [30, 34, 42],
+      "popup_text": [216, 222, 233],
+      "popup_border": [42, 47, 59],
+      "popup_highlight": [57, 66, 83],
+      "popup_highlight_text": [216, 222, 233],
+      "ntp_background": [30, 34, 42],
+      "ntp_text": [216, 222, 233],
+      "sidebar": [30, 34, 42],
+      "sidebar_text": [216, 222, 233],
+      "sidebar_border": [42, 47, 59],
+      "sidebar_highlight": [57, 66, 83],
+      "sidebar_highlight_text": [216, 222, 233],
+      "bookmark_text": [216, 222, 233]
+    }
+  }
+}

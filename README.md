@@ -1,0 +1,32 @@
+# NordShade
+
+A darker variant of the [Nord](https://www.nordtheme.com/) color scheme.
+
+## Color Palette
+
+| Purpose     | Nord      | NordShade | Change |
+| ----------- | --------- | --------- | ------ |
+| Background  | `#2E3440` | `#1E222A` | -34.6% |
+| Foreground  | `#D8DEE9` | `#D8DEE9` | +0.0%  |
+| Selection   | `#4C566A` | `#394253` | -23.5% |
+| Comments    | `#616E88` | `#57637D` | -9.8%  |
+| Red         | `#BF616A` | `#BF616A` | +0.0%  |
+| Orange      | `#D08770` | `#D08770` | +0.0%  |
+| Yellow      | `#EBCB8B` | `#EBCB8B` | +0.0%  |
+| Green       | `#A3BE8C` | `#A3BE8C` | +0.0%  |
+| Cyan        | `#88C0D0` | `#88C0D0` | +0.0%  |
+| Blue        | `#81A1C1` | `#81A1C1` | +0.0%  |
+| Purple      | `#B48EAD` | `#B48EAD` | +0.0%  |
+| Dark Gray   | `#3B4252` | `#2A2F3B` | -28.7% |
+| Bright Gray | `#E5E9F0` | `#CACFD6` | -11.3% |
+
+## Themes
+
+NordShade is available for:
+
+- [Visual Studio 2022](./VisualStudio2022/)
+- [Visual Studio Code](./VisualStudioCode/)
+- [Windows Terminal](./WindowsTerminal/)
+- [Windows 11](./Windows11/)
+- [Microsoft Edge](./MicrosoftEdge/)
+- [Obsidian](./Obsidian/)
