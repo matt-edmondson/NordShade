@@ -11,8 +11,8 @@ $PSScriptRoot = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
 $GlobalAutoApply = $null
 
 # Add debugging flag
-$VerbosePreference = "Continue"
-$DebugMode = $true
+$VerbosePreference = "SilentlyContinue"
+$DebugMode = $false
 
 # Add debugging function
 function Write-DebugMessage {
@@ -106,11 +106,17 @@ function Download-ThemeFiles {
             $filePath = "$TempPath\$ThemeName\$file"
             Write-Host "  - $file" -ForegroundColor Gray
             try {
-                Invoke-WebRequest -Uri $fileUrl -OutFile $filePath
+                Invoke-WebRequest -Uri $fileUrl -OutFile $filePath -ErrorAction Stop
                 
                 # Make script files executable (PowerShell doesn't need this but keeping for consistency)
                 if ($file -like "*.ps1" -or $file -like "*.sh") {
                     # PowerShell scripts don't need to be marked executable
+                }
+                
+                # If we're downloading Windows11 theme and the file is a jpg, copy it to the temp root for compatibility
+                if ($ThemeName -eq "Windows11" -and $file -like "*.jpg") {
+                    Write-Host "  - Copying wallpaper to $TempPath\NordShade.jpg for Windows 11 theme" -ForegroundColor Gray
+                    Copy-Item -Path $filePath -Destination "$TempPath\NordShade.jpg" -Force
                 }
             } catch {
                 Write-Host "    Failed to download ${file}: $_" -ForegroundColor Red

@@ -1,9 +1,10 @@
 # NordShade for Microsoft Edge - Installation Script
 # This script installs the NordShade theme for Microsoft Edge
 
-function Install-EdgeTheme {
+function Install-MicrosoftEdgeTheme {
     param (
-        [string]$ThemeRoot = $PSScriptRoot
+        [string]$ThemeRoot = $PSScriptRoot,
+        [switch]$AutoApply
     )
     
     Write-Host "Installing NordShade for Microsoft Edge..." -ForegroundColor Yellow
@@ -52,8 +53,8 @@ function Install-EdgeTheme {
 
 # If script is run directly (not imported), install the theme
 if ($MyInvocation.InvocationName -ne ".") {
-    Install-EdgeTheme
+    Install-MicrosoftEdgeTheme
 }
 
 # Export the function for import by the main installer
-Export-ModuleMember -Function Install-EdgeTheme -ErrorAction SilentlyContinue 
+Export-ModuleMember -Function Install-MicrosoftEdgeTheme -ErrorAction SilentlyContinue 

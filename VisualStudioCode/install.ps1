@@ -1,7 +1,7 @@
 # NordShade for Visual Studio Code - Installation Script
 # This script installs the NordShade theme for Visual Studio Code
 
-function Install-VSCodeTheme {
+function Install-VisualStudioCodeTheme {
     param (
         [string]$ThemeRoot = $PSScriptRoot,
         [switch]$AutoApply
@@ -67,8 +67,8 @@ function Install-VSCodeTheme {
 
 # If script is run directly (not imported), install the theme
 if ($MyInvocation.InvocationName -ne ".") {
-    Install-VSCodeTheme
+    Install-VisualStudioCodeTheme
 }
 
 # Export the function for import by the main installer
-Export-ModuleMember -Function Install-VSCodeTheme -ErrorAction SilentlyContinue 
+Export-ModuleMember -Function Install-VisualStudioCodeTheme -ErrorAction SilentlyContinue 
