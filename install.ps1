@@ -174,6 +174,14 @@ function Invoke-ThemeInstaller {
         Copy-Item -Path $InstallerPath -Destination $tempModulePath -Force
         Write-DebugMessage "Copied installer to module path: $tempModulePath" "Invoke-ThemeInstaller"
         
+        # Copy all theme files to the temp directory to ensure they're available to the installer
+        $themeDir = Split-Path -Parent -Path $InstallerPath
+        $themeFiles = Get-ChildItem -Path $themeDir -File | Where-Object { $_.Name -ne "install.ps1" -and $_.Name -ne "install.sh" }
+        foreach ($file in $themeFiles) {
+            Write-DebugMessage "Copying theme file: $($file.FullName) to $TempPath" "Invoke-ThemeInstaller"
+            Copy-Item -Path $file.FullName -Destination $TempPath -Force
+        }
+        
         # Append proper module export if needed
         $moduleContent = Get-Content -Path $tempModulePath -Raw
         if (-not ($moduleContent -match "Export-ModuleMember")) {
@@ -204,11 +212,11 @@ function Invoke-ThemeInstaller {
         $functionName = "Install-${ThemeName}Theme"
         Write-DebugMessage "Calling function: $functionName" "Invoke-ThemeInstaller"
         
-        # Call the function with parameters
+        # Call the function with parameters - Pass $TempPath as ThemeRoot to use the copied theme files
         if ($AutoApply) {
-            & $functionName -AutoApply -ThemeRoot "$NordShadeRoot\$ThemeName"
+            & $functionName -AutoApply -ThemeRoot $TempPath
         } else {
-            & $functionName -ThemeRoot "$NordShadeRoot\$ThemeName"
+            & $functionName -ThemeRoot $TempPath
         }
         
         # Clean up

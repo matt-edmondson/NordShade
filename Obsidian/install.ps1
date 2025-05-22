@@ -12,7 +12,7 @@ function Install-ObsidianTheme {
     
     # Ask for Obsidian vault location if not provided
     if ([string]::IsNullOrWhiteSpace($VaultPath)) {
-        $defaultVault = "${env:USERPROFILE}\Documents\Obsidian"
+        $defaultVault = Join-Path -Path ([Environment]::GetFolderPath("MyDocuments")) -ChildPath "Obsidian"
         $VaultPath = Read-Host "Enter your Obsidian vault path (or press Enter for default: $defaultVault)"
         
         if ([string]::IsNullOrWhiteSpace($VaultPath)) {
@@ -32,9 +32,24 @@ function Install-ObsidianTheme {
         New-Item -Path $obsidianThemePath -ItemType Directory -Force | Out-Null
     }
     
+    # Ensure we have the correct path to theme files
+    $themeFile = Join-Path -Path $ThemeRoot -ChildPath "theme.css"
+    $manifestFile = Join-Path -Path $ThemeRoot -ChildPath "manifest.json"
+    
+    # Verify theme files exist
+    if (-not (Test-Path $themeFile)) {
+        Write-Host "Theme file not found at: $themeFile" -ForegroundColor Red
+        return
+    }
+    
+    if (-not (Test-Path $manifestFile)) {
+        Write-Host "Manifest file not found at: $manifestFile" -ForegroundColor Red
+        return
+    }
+    
     # Copy theme files
-    Copy-Item "$ThemeRoot\theme.css" -Destination $obsidianThemePath
-    Copy-Item "$ThemeRoot\manifest.json" -Destination $obsidianThemePath
+    Copy-Item $themeFile -Destination $obsidianThemePath
+    Copy-Item $manifestFile -Destination $obsidianThemePath
     
     Write-Host "Theme files installed to $obsidianThemePath" -ForegroundColor Green
     
