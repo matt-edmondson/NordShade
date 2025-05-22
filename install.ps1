@@ -64,6 +64,7 @@ function Download-Repository {
     # Download Windows 11 files
     Invoke-WebRequest -Uri "$RepoURL/raw/main/Windows11/theme.deskthemepack" -OutFile "$TempPath\Windows11\theme.deskthemepack"
     Invoke-WebRequest -Uri "$RepoURL/raw/main/Windows11/README.md" -OutFile "$TempPath\Windows11\README.md"
+    Invoke-WebRequest -Uri "$RepoURL/raw/main/Windows11/NordShade.jpg" -OutFile "$TempPath\Windows11\NordShade.jpg"
     
     # Download Edge files
     Invoke-WebRequest -Uri "$RepoURL/raw/main/MicrosoftEdge/manifest.json" -OutFile "$TempPath\MicrosoftEdge\manifest.json"
